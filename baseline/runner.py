@@ -2,7 +2,9 @@
 
 from __future__ import annotations
 
+import json
 from numbers import Real
+from pathlib import Path
 from typing import Any
 
 
@@ -72,3 +74,30 @@ def compare_snapshots(
     if actual != expected:
         return [f"{path}: expected {expected!r}, got {actual!r}"]
     return []
+
+
+def load_fixture(path: Path) -> dict[str, Any]:
+    """Load the versioned M0 fixture and reject ambiguous scenario definitions."""
+    fixture = json.loads(path.read_text(encoding="utf-8"))
+    if fixture.get("schema_version") != 1:
+        raise ValueError("fixture schema_version must be 1")
+
+    scenarios = fixture.get("scenarios")
+    if not isinstance(scenarios, list) or not scenarios:
+        raise ValueError("fixture must contain at least one scenario")
+
+    names: list[str] = []
+    for scenario in scenarios:
+        if not isinstance(scenario, dict):
+            raise ValueError("each scenario must be an object")
+        name = scenario.get("name")
+        payload = scenario.get("payload")
+        if not isinstance(name, str) or not name:
+            raise ValueError("each scenario must have a non-empty name")
+        if not isinstance(payload, dict) or "inputs" not in payload:
+            raise ValueError("each scenario must contain a payload with inputs")
+        names.append(name)
+
+    if len(names) != len(set(names)):
+        raise ValueError("scenario names must be unique")
+    return fixture

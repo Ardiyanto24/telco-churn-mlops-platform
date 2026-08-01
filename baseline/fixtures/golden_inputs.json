@@ -1,0 +1,147 @@
+{
+  "schema_version": 1,
+  "scenarios": [
+    {
+      "name": "single_standard",
+      "payload": {
+        "inputs": [
+          {
+            "customerID": "BASELINE-0001",
+            "gender": "Female",
+            "SeniorCitizen": 0,
+            "Partner": "Yes",
+            "Dependents": "No",
+            "tenure": 1,
+            "PhoneService": "No",
+            "MultipleLines": "No phone service",
+            "InternetService": "DSL",
+            "OnlineSecurity": "No",
+            "OnlineBackup": "Yes",
+            "DeviceProtection": "No",
+            "TechSupport": "No",
+            "StreamingTV": "No",
+            "StreamingMovies": "No",
+            "Contract": "Month-to-month",
+            "PaperlessBilling": "Yes",
+            "PaymentMethod": "Electronic check",
+            "MonthlyCharges": 29.85,
+            "TotalCharges": 29.85
+          }
+        ]
+      }
+    },
+    {
+      "name": "boundary_zero_tenure",
+      "payload": {
+        "inputs": [
+          {
+            "customerID": "BASELINE-0002",
+            "gender": "Male",
+            "SeniorCitizen": 0,
+            "Partner": "No",
+            "Dependents": "No",
+            "tenure": 0,
+            "PhoneService": "Yes",
+            "MultipleLines": "No",
+            "InternetService": "No",
+            "OnlineSecurity": "No internet service",
+            "OnlineBackup": "No internet service",
+            "DeviceProtection": "No internet service",
+            "TechSupport": "No internet service",
+            "StreamingTV": "No internet service",
+            "StreamingMovies": "No internet service",
+            "Contract": "Month-to-month",
+            "PaperlessBilling": "No",
+            "PaymentMethod": "Mailed check",
+            "MonthlyCharges": 19.7,
+            "TotalCharges": 0.0
+          }
+        ]
+      }
+    },
+    {
+      "name": "batch_customers",
+      "payload": {
+        "inputs": [
+          {
+            "customerID": "BASELINE-0003",
+            "gender": "Male",
+            "SeniorCitizen": 1,
+            "Partner": "No",
+            "Dependents": "No",
+            "tenure": 72,
+            "PhoneService": "Yes",
+            "MultipleLines": "Yes",
+            "InternetService": "Fiber optic",
+            "OnlineSecurity": "Yes",
+            "OnlineBackup": "Yes",
+            "DeviceProtection": "Yes",
+            "TechSupport": "Yes",
+            "StreamingTV": "Yes",
+            "StreamingMovies": "Yes",
+            "Contract": "Two year",
+            "PaperlessBilling": "No",
+            "PaymentMethod": "Credit card (automatic)",
+            "MonthlyCharges": 105.5,
+            "TotalCharges": 7596.0
+          },
+          {
+            "customerID": "BASELINE-0004",
+            "gender": "Female",
+            "SeniorCitizen": 0,
+            "Partner": "Yes",
+            "Dependents": "Yes",
+            "tenure": 24,
+            "PhoneService": "Yes",
+            "MultipleLines": "No",
+            "InternetService": "DSL",
+            "OnlineSecurity": "Yes",
+            "OnlineBackup": "No",
+            "DeviceProtection": "No",
+            "TechSupport": "Yes",
+            "StreamingTV": "No",
+            "StreamingMovies": "No",
+            "Contract": "One year",
+            "PaperlessBilling": "Yes",
+            "PaymentMethod": "Bank transfer (automatic)",
+            "MonthlyCharges": 54.4,
+            "TotalCharges": 1305.6
+          }
+        ]
+      }
+    },
+    {
+      "name": "dict_of_lists",
+      "payload": {
+        "inputs": {
+          "customerID": ["BASELINE-0005"],
+          "gender": ["Female"],
+          "SeniorCitizen": [0],
+          "Partner": ["No"],
+          "Dependents": ["No"],
+          "tenure": [18],
+          "PhoneService": ["Yes"],
+          "MultipleLines": ["No"],
+          "InternetService": ["Fiber optic"],
+          "OnlineSecurity": ["No"],
+          "OnlineBackup": ["No"],
+          "DeviceProtection": ["Yes"],
+          "TechSupport": ["No"],
+          "StreamingTV": ["Yes"],
+          "StreamingMovies": ["Yes"],
+          "Contract": ["Month-to-month"],
+          "PaperlessBilling": ["Yes"],
+          "PaymentMethod": ["Electronic check"],
+          "MonthlyCharges": [89.1],
+          "TotalCharges": [1603.8]
+        }
+      }
+    },
+    {
+      "name": "invalid_empty_inputs",
+      "payload": {
+        "inputs": []
+      }
+    }
+  ]
+}
