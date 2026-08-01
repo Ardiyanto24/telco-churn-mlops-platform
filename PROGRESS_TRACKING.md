@@ -6,9 +6,9 @@
 
 ## Current snapshot
 
-- Overall program: **M0–M1 complete; M2 is the next recommended milestone.**
-- Current implementation foundation: Python package structure, validated settings, stable future transformer module path, reproducible Docker runtime, and frozen legacy inference oracle.
-- Active branch at last update: `codex/m1-package-foundation`.
+- Overall program: **M0–M2 complete; M3 and M4 are the next available milestones.**
+- Current implementation foundation: Python package structure, validated settings, stable future transformer module path, reproducible Docker runtime, frozen legacy inference oracle, and a versioned Prediction API contract.
+- Active branch at last update: not recorded in the M2 evidence.
 - The legacy deployment remains isolated in `../legacy-deployment/` and is not yet replaced by the new package.
 
 ## Milestone status
@@ -17,7 +17,7 @@
 |---|---|---|---|
 | M0 | Legacy baseline | Done | Golden fixtures, snapshot, checksums, and Docker verifier recorded. |
 | M1 | Package and configuration foundation | Done | Runtime lock tested with scikit-learn 1.6.1; M0 prediction scenarios remain identical. |
-| M2 | Prediction API contract | Next | Versioned API schemas, health/version endpoints, validation, and stable error semantics. |
+| M2 | Prediction API contract | Done | Versioned schemas, health/version endpoints, validation, stable errors, OpenAPI snapshot, and M0 candidate verification recorded. |
 | M3 | Artifact contract and loading | Not started | Manifest, checksum, compatibility loader, and migration plan for legacy Joblib. |
 | M4–M21 | Remaining MLOps lifecycle | Not started | Follow dependency order in the implementation plan. |
 

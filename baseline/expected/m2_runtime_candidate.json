@@ -1,0 +1,259 @@
+{
+  "artifacts": {
+    "model_final.joblib": "a59f87cdf6a1270dffa1e011da03547ed8663f26fed5fc2aabd2a1fd1adc08c8",
+    "preprocessor.joblib": "07cd2d7aaa0a2d8f60a4cc257d8145d2dd67a34c7c9a0c72813469aaab0c7ec2"
+  },
+  "runtime": {
+    "fastapi": "0.141.1",
+    "joblib": "1.5.3",
+    "lightgbm": "4.7.0",
+    "numpy": "2.2.6",
+    "pandas": "2.3.3",
+    "python": "3.10.20",
+    "scikit_learn": "1.6.1",
+    "xgboost": "3.2.0"
+  },
+  "scenarios": [
+    {
+      "name": "single_standard",
+      "processed_features": {
+        "column_count": 29,
+        "columns": [
+          "SeniorCitizen",
+          "Partner",
+          "Dependents",
+          "tenure",
+          "PhoneService",
+          "MultipleLines",
+          "OnlineSecurity",
+          "OnlineBackup",
+          "DeviceProtection",
+          "TechSupport",
+          "StreamingTV",
+          "StreamingMovies",
+          "PaperlessBilling",
+          "MonthlyCharges",
+          "tc_residual",
+          "monthly_to_total_ratio",
+          "is_auto_payment",
+          "service_count",
+          "has_any_addon",
+          "Contract_One year",
+          "Contract_Two year",
+          "InternetService_Fiber optic",
+          "InternetService_No",
+          "PaymentMethod_Credit card (automatic)",
+          "PaymentMethod_Electronic check",
+          "PaymentMethod_Mailed check",
+          "tenure_group_G2_2_18",
+          "tenure_group_G3_18_44",
+          "tenure_group_G4_44_72"
+        ]
+      },
+      "response": {
+        "results": [
+          {
+            "churn_binary": 1,
+            "churn_prediction": "Churn",
+            "churn_probability": 0.8411,
+            "id": "BASELINE-0001",
+            "risk_level": "High Risk"
+          }
+        ],
+        "status": "success",
+        "summary": {
+          "avg_churn_probability": 0.8411,
+          "churn_rate_pct": 100.0,
+          "decision_threshold": 0.6238,
+          "predicted_churn": 1,
+          "total_customers": 1
+        }
+      }
+    },
+    {
+      "name": "boundary_zero_tenure",
+      "processed_features": {
+        "column_count": 29,
+        "columns": [
+          "SeniorCitizen",
+          "Partner",
+          "Dependents",
+          "tenure",
+          "PhoneService",
+          "MultipleLines",
+          "OnlineSecurity",
+          "OnlineBackup",
+          "DeviceProtection",
+          "TechSupport",
+          "StreamingTV",
+          "StreamingMovies",
+          "PaperlessBilling",
+          "MonthlyCharges",
+          "tc_residual",
+          "monthly_to_total_ratio",
+          "is_auto_payment",
+          "service_count",
+          "has_any_addon",
+          "Contract_One year",
+          "Contract_Two year",
+          "InternetService_Fiber optic",
+          "InternetService_No",
+          "PaymentMethod_Credit card (automatic)",
+          "PaymentMethod_Electronic check",
+          "PaymentMethod_Mailed check",
+          "tenure_group_G2_2_18",
+          "tenure_group_G3_18_44",
+          "tenure_group_G4_44_72"
+        ]
+      },
+      "response": {
+        "results": [
+          {
+            "churn_binary": 0,
+            "churn_prediction": "No Churn",
+            "churn_probability": 0.1966,
+            "id": "BASELINE-0002",
+            "risk_level": "Safe"
+          }
+        ],
+        "status": "success",
+        "summary": {
+          "avg_churn_probability": 0.1966,
+          "churn_rate_pct": 0.0,
+          "decision_threshold": 0.6238,
+          "predicted_churn": 0,
+          "total_customers": 1
+        }
+      }
+    },
+    {
+      "name": "batch_customers",
+      "processed_features": {
+        "column_count": 29,
+        "columns": [
+          "SeniorCitizen",
+          "Partner",
+          "Dependents",
+          "tenure",
+          "PhoneService",
+          "MultipleLines",
+          "OnlineSecurity",
+          "OnlineBackup",
+          "DeviceProtection",
+          "TechSupport",
+          "StreamingTV",
+          "StreamingMovies",
+          "PaperlessBilling",
+          "MonthlyCharges",
+          "tc_residual",
+          "monthly_to_total_ratio",
+          "is_auto_payment",
+          "service_count",
+          "has_any_addon",
+          "Contract_One year",
+          "Contract_Two year",
+          "InternetService_Fiber optic",
+          "InternetService_No",
+          "PaymentMethod_Credit card (automatic)",
+          "PaymentMethod_Electronic check",
+          "PaymentMethod_Mailed check",
+          "tenure_group_G2_2_18",
+          "tenure_group_G3_18_44",
+          "tenure_group_G4_44_72"
+        ]
+      },
+      "response": {
+        "results": [
+          {
+            "churn_binary": 0,
+            "churn_prediction": "No Churn",
+            "churn_probability": 0.0647,
+            "id": "BASELINE-0003",
+            "risk_level": "Safe"
+          },
+          {
+            "churn_binary": 0,
+            "churn_prediction": "No Churn",
+            "churn_probability": 0.0349,
+            "id": "BASELINE-0004",
+            "risk_level": "Safe"
+          }
+        ],
+        "status": "success",
+        "summary": {
+          "avg_churn_probability": 0.0498,
+          "churn_rate_pct": 0.0,
+          "decision_threshold": 0.6238,
+          "predicted_churn": 0,
+          "total_customers": 2
+        }
+      }
+    },
+    {
+      "name": "dict_of_lists",
+      "processed_features": {
+        "column_count": 29,
+        "columns": [
+          "SeniorCitizen",
+          "Partner",
+          "Dependents",
+          "tenure",
+          "PhoneService",
+          "MultipleLines",
+          "OnlineSecurity",
+          "OnlineBackup",
+          "DeviceProtection",
+          "TechSupport",
+          "StreamingTV",
+          "StreamingMovies",
+          "PaperlessBilling",
+          "MonthlyCharges",
+          "tc_residual",
+          "monthly_to_total_ratio",
+          "is_auto_payment",
+          "service_count",
+          "has_any_addon",
+          "Contract_One year",
+          "Contract_Two year",
+          "InternetService_Fiber optic",
+          "InternetService_No",
+          "PaymentMethod_Credit card (automatic)",
+          "PaymentMethod_Electronic check",
+          "PaymentMethod_Mailed check",
+          "tenure_group_G2_2_18",
+          "tenure_group_G3_18_44",
+          "tenure_group_G4_44_72"
+        ]
+      },
+      "response": {
+        "results": [
+          {
+            "churn_binary": 1,
+            "churn_prediction": "Churn",
+            "churn_probability": 0.7915,
+            "id": "BASELINE-0005",
+            "risk_level": "High Risk"
+          }
+        ],
+        "status": "success",
+        "summary": {
+          "avg_churn_probability": 0.7915,
+          "churn_rate_pct": 100.0,
+          "decision_threshold": 0.6238,
+          "predicted_churn": 1,
+          "total_customers": 1
+        }
+      }
+    },
+    {
+      "name": "invalid_empty_inputs",
+      "processed_features": null,
+      "response": {
+        "message": "Input dataframe kosong.",
+        "status": "error"
+      }
+    }
+  ],
+  "schema_version": 1,
+  "warnings": []
+}
