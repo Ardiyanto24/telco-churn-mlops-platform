@@ -32,12 +32,12 @@ def create_app(
     *, service: PredictionService | None = None, settings: Settings | None = None
 ) -> FastAPI:
     """Create the M2 application without triggering M3 artifact loading."""
-    service = PredictionService.unavailable() if service is None else service
     settings = load_settings() if settings is None else settings
+    service = PredictionService.from_artifact_dir(settings.artifact_dir, settings) if service is None else service
     app = FastAPI(
         title="Telco Churn Prediction API",
         version=SERVICE_VERSION,
-        description="Versioned, validated prediction contract. Artifact loading follows in M3.",
+        description="Versioned, validated prediction contract backed by verified M3 artifacts.",
     )
 
     @app.exception_handler(RequestValidationError)

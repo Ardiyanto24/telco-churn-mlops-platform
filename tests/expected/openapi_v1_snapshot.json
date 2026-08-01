@@ -1,6 +1,6 @@
 {
   "info": {
-    "description": "Versioned, validated prediction contract. Artifact loading follows in M3.",
+    "description": "Versioned, validated prediction contract backed by verified M3 artifacts.",
     "title": "Telco Churn Prediction API",
     "version": "0.1.0"
   },
