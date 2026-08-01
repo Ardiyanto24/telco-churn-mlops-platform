@@ -1,4 +1,5 @@
 import unittest
+from unittest.mock import patch
 from pathlib import Path
 
 from telco_churn.settings import SettingsError, load_settings
@@ -24,6 +25,14 @@ class SettingsTests(unittest.TestCase):
         )
 
         self.assertEqual(settings.artifact_dir, Path("runtime-artifacts"))
+        self.assertEqual(settings.decision_threshold, 0.65)
+
+    def test_reads_process_environment_when_no_mapping_is_supplied(self):
+        with patch.dict(
+            "os.environ", {"TELCO_CHURN_DECISION_THRESHOLD": "0.65"}, clear=True
+        ):
+            settings = load_settings()
+
         self.assertEqual(settings.decision_threshold, 0.65)
 
     def test_rejects_non_numeric_threshold(self):

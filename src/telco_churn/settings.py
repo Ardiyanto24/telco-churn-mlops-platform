@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+import os
 from pathlib import Path
 from typing import Mapping
 
@@ -29,8 +30,9 @@ class Settings:
     high_risk_threshold: float
 
 
-def load_settings(environ: Mapping[str, str]) -> Settings:
-    """Load settings from an explicit environment mapping for deterministic tests."""
+def load_settings(environ: Mapping[str, str] | None = None) -> Settings:
+    """Load settings from an explicit mapping or the current process environment."""
+    environ = os.environ if environ is None else environ
     decision_threshold = _read_float(
         environ, "TELCO_CHURN_DECISION_THRESHOLD", DEFAULT_DECISION_THRESHOLD
     )

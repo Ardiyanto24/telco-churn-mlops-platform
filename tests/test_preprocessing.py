@@ -1,12 +1,17 @@
 """Contract tests for the stable preprocessing module path."""
 
 import unittest
+from importlib.util import find_spec
 
-import pandas as pd
+if find_spec("pandas") and find_spec("sklearn"):
+    import pandas as pd
+    from telco_churn.preprocessing import FeatureEngineer, PreprocessingPipeline
 
-from telco_churn.preprocessing import FeatureEngineer, PreprocessingPipeline
 
-
+@unittest.skipUnless(
+    find_spec("pandas") and find_spec("sklearn"),
+    "requires the locked M1 runtime (pandas and scikit-learn)",
+)
 class FeatureEngineerTests(unittest.TestCase):
     def test_creates_expected_domain_features(self) -> None:
         source = pd.DataFrame(

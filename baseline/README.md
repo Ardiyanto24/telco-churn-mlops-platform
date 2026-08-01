@@ -34,3 +34,5 @@ Runner memasang folder baseline ke container secara read-only dan mengatur `PYTH
 ## Batas interpretasi
 
 Snapshot ini membuktikan perilaku deployment pada image Docker yang direkam, bukan membuktikan bahwa environment tersebut identik dengan environment saat model dilatih. Detail ketidakcocokan versi dan mitigasi M1 dicatat pada [ADR-0001](../docs/decisions/0001-legacy-baseline-runtime.md).
+
+M1 juga menyimpan `expected/m1_runtime_candidate.json` sebagai bukti terpisah bahwa lock runtime scikit-learn 1.6.1 menghasilkan skenario prediksi yang sama tanpa warning deserialisasi. File tersebut tidak menggantikan snapshot observasional legacy.
