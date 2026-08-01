@@ -1,9 +1,15 @@
 import json
+import os
 import tempfile
 import unittest
 from pathlib import Path
 
-from baseline.runner import compare_snapshots, load_fixture
+from baseline.runner import (
+    build_capture_command,
+    capture_snapshot,
+    compare_snapshots,
+    load_fixture,
+)
 
 
 class CompareSnapshotsTests(unittest.TestCase):
@@ -60,6 +66,36 @@ class FixtureContractTests(unittest.TestCase):
 
             with self.assertRaisesRegex(ValueError, "unique"):
                 load_fixture(fixture_path)
+
+
+class DockerCaptureCommandTests(unittest.TestCase):
+    def test_mounts_the_capture_script_read_only_and_disables_bytecode(self):
+        command = build_capture_command(
+            image="example-baseline:1",
+            baseline_dir=Path("baseline").resolve(),
+        )
+
+        self.assertEqual(command[:3], ["docker", "run", "--rm"])
+        self.assertIn("PYTHONDONTWRITEBYTECODE=1", command)
+        self.assertIn("example-baseline:1", command)
+        self.assertTrue(any("target=/baseline,readonly" in part for part in command))
+        self.assertEqual(command[-1], "/baseline/container_capture.py")
+
+
+class DockerCaptureIntegrationTests(unittest.TestCase):
+    def test_captures_all_golden_scenarios_from_the_legacy_image(self):
+        fixture = load_fixture(Path("baseline/fixtures/golden_inputs.json"))
+
+        snapshot = capture_snapshot(
+            image=os.environ.get("M0_BASELINE_IMAGE", "telco-churn-baseline:local"),
+            baseline_dir=Path("baseline"),
+            fixture=fixture,
+        )
+
+        self.assertEqual(snapshot["schema_version"], 1)
+        self.assertEqual(snapshot["runtime"]["python"], "3.10.20")
+        self.assertEqual(len(snapshot["scenarios"]), len(fixture["scenarios"]))
+        self.assertEqual(snapshot["scenarios"][-1]["response"]["status"], "error")
 
 
 if __name__ == "__main__":
