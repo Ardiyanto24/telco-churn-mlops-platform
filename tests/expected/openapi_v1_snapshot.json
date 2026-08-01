@@ -1,0 +1,41 @@
+{
+  "info": {
+    "description": "Versioned, validated prediction contract. Artifact loading follows in M3.",
+    "title": "Telco Churn Prediction API",
+    "version": "0.1.0"
+  },
+  "paths": {
+    "/health/live": {
+      "get": {
+        "responses": [
+          "200"
+        ]
+      }
+    },
+    "/health/ready": {
+      "get": {
+        "responses": [
+          "200",
+          "503"
+        ]
+      }
+    },
+    "/v1/predict": {
+      "post": {
+        "responses": [
+          "200",
+          "422",
+          "500",
+          "503"
+        ]
+      }
+    },
+    "/version": {
+      "get": {
+        "responses": [
+          "200"
+        ]
+      }
+    }
+  }
+}

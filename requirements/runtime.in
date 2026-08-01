@@ -1,5 +1,6 @@
 # Direct runtime dependencies. Exact versions are in runtime.lock.
 fastapi==0.141.1
+httpx2==2.7.0
 joblib==1.5.3
 lightgbm==4.7.0
 numpy==2.2.6
