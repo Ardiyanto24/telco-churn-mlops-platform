@@ -142,6 +142,7 @@ class TelemetryUnitTests(unittest.TestCase):
         fallback = json.loads(fallback_lines[0])
         self.assertEqual(fallback["event_name"], "telemetry_write_failed")
         self.assertEqual(fallback["failed_event_name"], "prediction_completed")
+        self.assertEqual(fallback["request_id"], "request-123")
         self.assertNotIn("must-not-leak", json.dumps(fallback))
 
     def test_hmac_entity_key_is_stable_without_retaining_source_identifier(self) -> None:
