@@ -1,9 +1,16 @@
-FROM telco-churn-m8-runtime:local AS builder
+FROM python:3.10-slim AS builder
+
+ENV VIRTUAL_ENV=/opt/venv
+RUN python -m venv $VIRTUAL_ENV
+ENV PATH="$VIRTUAL_ENV/bin:$PATH"
+
+COPY requirements/runtime.lock /tmp/runtime.lock
+RUN pip install --no-cache-dir -r /tmp/runtime.lock
 
 WORKDIR /build
 COPY src ./src
 
-FROM telco-churn-m8-runtime:local AS runtime
+FROM python:3.10-slim AS runtime
 
 RUN apt-get update \
     && apt-get install -y --no-install-recommends libgomp1 \
@@ -11,11 +18,14 @@ RUN apt-get update \
     && groupadd --system app \
     && useradd --system --gid app --home-dir /app --create-home app
 
-ENV PYTHONDONTWRITEBYTECODE=1 \
+ENV VIRTUAL_ENV=/opt/venv \
+    PATH="/opt/venv/bin:$PATH" \
+    PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
     PYTHONPATH=/app/src \
     TELCO_CHURN_BUNDLE_DIR=/opt/telco-churn/model
 
+COPY --from=builder /opt/venv /opt/venv
 COPY --from=builder /build/src /app/src
 USER app
 WORKDIR /app
