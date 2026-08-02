@@ -1,0 +1,41 @@
+services:
+  api:
+    image: telco-churn-api:${TELCO_CHURN_IMAGE_TAG:?Set TELCO_CHURN_IMAGE_TAG to a Git-SHA image tag}
+    build:
+      context: .
+      dockerfile: docker/api.Dockerfile
+    environment:
+      TELCO_CHURN_BUNDLE_DIR: /opt/telco-churn/model
+      TELCO_CHURN_LOG_LEVEL: ${TELCO_CHURN_LOG_LEVEL:-info}
+      TELCO_CHURN_DECISION_THRESHOLD: ${TELCO_CHURN_DECISION_THRESHOLD:-0.6238}
+      TELCO_CHURN_LOW_RISK_THRESHOLD: ${TELCO_CHURN_LOW_RISK_THRESHOLD:-0.35}
+      TELCO_CHURN_HIGH_RISK_THRESHOLD: ${TELCO_CHURN_HIGH_RISK_THRESHOLD:-0.75}
+    ports:
+      - "127.0.0.1:${TELCO_CHURN_API_PORT:-8000}:8000"
+    volumes:
+      - "${TELCO_CHURN_BUNDLE_DIR:?Set TELCO_CHURN_BUNDLE_DIR to an absolute M3 bundle path}:/opt/telco-churn/model:ro"
+    read_only: true
+    tmpfs:
+      - /tmp
+    security_opt:
+      - no-new-privileges:true
+    mem_limit: 2g
+    cpus: 1.0
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health/ready', timeout=2).read()"]
+      interval: 10s
+      timeout: 3s
+      retries: 6
+      start_period: 15s
+
+  registry:
+    profiles: ["registry"]
+    image: telco-churn-m8-runtime:local
+    command: ["mlflow", "server", "--host", "0.0.0.0", "--port", "5000", "--backend-store-uri", "sqlite:////mlflow/mlflow.db", "--default-artifact-root", "/mlflow/artifacts"]
+    ports:
+      - "127.0.0.1:5000:5000"
+    volumes:
+      - mlflow-metadata:/mlflow
+
+volumes:
+  mlflow-metadata:

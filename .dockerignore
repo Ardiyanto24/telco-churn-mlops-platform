@@ -1,0 +1,14 @@
+.git/
+.dvc/
+.dvc-tools/
+.env*
+artifacts/
+baseline/
+coverage/
+data/
+docs/
+mlflow/
+tests/
+*.ipynb
+*.py[cod]
+__pycache__/

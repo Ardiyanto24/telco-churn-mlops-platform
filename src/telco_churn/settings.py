@@ -38,7 +38,7 @@ def load_settings(environ: Mapping[str, str] | None = None) -> Settings:
         environ, "TELCO_CHURN_DECISION_THRESHOLD", DEFAULT_DECISION_THRESHOLD
     )
     settings = Settings(
-        artifact_dir=Path(environ.get("TELCO_CHURN_ARTIFACT_DIR", DEFAULT_ARTIFACT_DIR)),
+        artifact_dir=Path(environ.get("TELCO_CHURN_BUNDLE_DIR", environ.get("TELCO_CHURN_ARTIFACT_DIR", DEFAULT_ARTIFACT_DIR))),
         model_filename=environ.get(
             "TELCO_CHURN_MODEL_FILENAME", DEFAULT_MODEL_FILENAME
         ),
@@ -46,8 +46,8 @@ def load_settings(environ: Mapping[str, str] | None = None) -> Settings:
             "TELCO_CHURN_PREPROCESSOR_FILENAME", DEFAULT_PREPROCESSOR_FILENAME
         ),
         decision_threshold=decision_threshold,
-        low_risk_threshold=DEFAULT_LOW_RISK_THRESHOLD,
-        high_risk_threshold=DEFAULT_HIGH_RISK_THRESHOLD,
+        low_risk_threshold=_read_float(environ, "TELCO_CHURN_LOW_RISK_THRESHOLD", DEFAULT_LOW_RISK_THRESHOLD),
+        high_risk_threshold=_read_float(environ, "TELCO_CHURN_HIGH_RISK_THRESHOLD", DEFAULT_HIGH_RISK_THRESHOLD),
     )
     _validate(settings)
     return settings

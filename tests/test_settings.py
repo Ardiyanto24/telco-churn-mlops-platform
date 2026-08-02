@@ -21,11 +21,20 @@ class SettingsTests(unittest.TestCase):
             {
                 "TELCO_CHURN_ARTIFACT_DIR": "runtime-artifacts",
                 "TELCO_CHURN_DECISION_THRESHOLD": "0.65",
+                "TELCO_CHURN_LOW_RISK_THRESHOLD": "0.45",
+                "TELCO_CHURN_HIGH_RISK_THRESHOLD": "0.85",
             }
         )
 
         self.assertEqual(settings.artifact_dir, Path("runtime-artifacts"))
         self.assertEqual(settings.decision_threshold, 0.65)
+        self.assertEqual(settings.low_risk_threshold, 0.45)
+        self.assertEqual(settings.high_risk_threshold, 0.85)
+
+    def test_accepts_m9_verified_bundle_directory_override(self):
+        settings = load_settings({"TELCO_CHURN_BUNDLE_DIR": "/opt/telco-churn/model"})
+
+        self.assertEqual(settings.artifact_dir, Path("/opt/telco-churn/model"))
 
     def test_reads_process_environment_when_no_mapping_is_supplied(self):
         with patch.dict(

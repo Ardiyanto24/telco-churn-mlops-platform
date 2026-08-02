@@ -7,7 +7,7 @@
 
 ## Current snapshot
 
-- Overall program: **M0-M8 complete; M9 is the next recommended milestone.**
+- Overall program: **M0-M9 complete; M10 is the next recommended milestone.**
 - The foundation now includes a verified legacy oracle, versioned data,
   reproducible training, M3 artifact bundles, and local MLflow experiment
   lineage/model registry.
@@ -29,7 +29,8 @@
 | M6 | Reproducible training | Done | Config-driven candidate bundles and deterministic training. |
 | M7 | Experiment tracking/registry | Done | MLflow SQLite lineage, immutable versions, candidate alias. |
 | M8 | Evaluation/promotion gates | Done | Versioned offline gates, model card, approval artifact, champion alias control. |
-| M9-M21 | Remaining lifecycle | Not started | Follow dependency order in the implementation plan. |
+| M9 | Container/local runtime | Done | Verified local API image, Compose profile, and read-only bundle mount. |
+| M10-M21 | Remaining lifecycle | Not started | Follow dependency order in the implementation plan. |
 
 `Done` means a completion report with recorded verification evidence exists.
 
