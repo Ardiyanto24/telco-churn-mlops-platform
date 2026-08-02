@@ -23,3 +23,13 @@ class CiWorkflowTests(unittest.TestCase):
         self.assertIn("tests.does_not_exist", workflow)
         self.assertIn("test_evaluation_gates", workflow)
         self.assertIn("docker compose", workflow)
+
+    def test_release_workflow_requires_environment_gates_and_records_manifest_evidence(self) -> None:
+        workflow = (Path(__file__).resolve().parents[1] / ".github/workflows/release.yml").read_text(encoding="utf-8")
+
+        self.assertIn("workflow_dispatch", workflow)
+        self.assertIn("release_manifest", workflow)
+        self.assertIn("environment: staging", workflow)
+        self.assertIn("environment: production", workflow)
+        self.assertIn("ReleaseManifest.from_dict", workflow)
+        self.assertIn("retention-days: 30", workflow)
