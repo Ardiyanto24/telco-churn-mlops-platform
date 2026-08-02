@@ -21,8 +21,12 @@ TELEMETRY_SCHEMA_VERSION = "telco-churn-telemetry/v1"
 class ServiceMetrics:
     """Small in-process counter registry with OpenMetrics-compatible output."""
 
+    _LATENCY_BUCKETS = (10, 25, 50, 100, 250, 500, 1_000)
+
     def __init__(self) -> None:
         self._values: Counter[str] = Counter()
+        self._histograms: dict[str, list[int]] = {}
+        self._histogram_sums: Counter[str] = Counter()
         self._lock = Lock()
 
     def increment(self, name: str, amount: int = 1) -> None:
@@ -33,10 +37,30 @@ class ServiceMetrics:
         with self._lock:
             return self._values[name]
 
+    def observe_latency(self, name: str, milliseconds: float) -> None:
+        with self._lock:
+            buckets = self._histograms.setdefault(name, [0] * (len(self._LATENCY_BUCKETS) + 1))
+            for index, upper_bound in enumerate(self._LATENCY_BUCKETS):
+                if milliseconds <= upper_bound:
+                    buckets[index] += 1
+            buckets[-1] += 1
+            self._histogram_sums[name] += milliseconds
+
     def render_openmetrics(self) -> str:
         with self._lock:
             values = dict(self._values)
-        return "".join(f"# TYPE {name} counter\n{name} {value}\n" for name, value in sorted(values.items()))
+            histograms = {name: list(buckets) for name, buckets in self._histograms.items()}
+            histogram_sums = dict(self._histogram_sums)
+        counters = "".join(f"# TYPE {name} counter\n{name} {value}\n" for name, value in sorted(values.items()))
+        histogram_lines: list[str] = []
+        for name, buckets in sorted(histograms.items()):
+            histogram_lines.append(f"# TYPE {name} histogram\n")
+            for upper_bound, value in zip(self._LATENCY_BUCKETS, buckets[:-1], strict=True):
+                histogram_lines.append(f'{name}_bucket{{le="{upper_bound}"}} {value}\n')
+            histogram_lines.append(f'{name}_bucket{{le="+Inf"}} {buckets[-1]}\n')
+            histogram_lines.append(f"{name}_sum {histogram_sums[name]:.3f}\n")
+            histogram_lines.append(f"{name}_count {buckets[-1]}\n")
+        return counters + "".join(histogram_lines)
 
 
 @dataclass(frozen=True)

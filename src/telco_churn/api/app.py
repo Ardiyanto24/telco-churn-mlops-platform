@@ -58,6 +58,7 @@ def create_app(
         response.headers["X-Request-ID"] = context.request_id
         latency_ms = round((perf_counter() - context.started_at) * 1_000, 3)
         telemetry.metrics.increment("requests_total")
+        telemetry.metrics.observe_latency("request_latency_ms", latency_ms)
         if response.status_code >= 400:
             telemetry.metrics.increment("request_failures_total")
         telemetry.emit(
@@ -138,6 +139,7 @@ def create_app(
         context = _telemetry_context(request)
         telemetry.metrics.increment("prediction_requests_total")
         telemetry.metrics.increment("prediction_rows_total", len(results))
+        telemetry.metrics.observe_latency("inference_latency_ms", inference_latency_ms)
         telemetry.emit(
             "prediction_completed", request_id=context.request_id, trace_id=context.trace_id,
             outcome="success", model_version=service.model_version, schema_version="v1",
