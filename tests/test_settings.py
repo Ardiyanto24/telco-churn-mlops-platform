@@ -2,7 +2,7 @@ import unittest
 from unittest.mock import patch
 from pathlib import Path
 
-from telco_churn.settings import SettingsError, load_settings
+from telco_churn.settings import SettingsError, load_settings, risk_bands_for_threshold
 
 
 class SettingsTests(unittest.TestCase):
@@ -42,3 +42,6 @@ class SettingsTests(unittest.TestCase):
     def test_rejects_threshold_outside_risk_band(self):
         with self.assertRaisesRegex(SettingsError, "between"):
             load_settings({"TELCO_CHURN_DECISION_THRESHOLD": "0.9"})
+
+    def test_derives_ordered_candidate_risk_bands_from_a_selected_threshold(self):
+        self.assertEqual(risk_bands_for_threshold(0.9), (0.7, 1.0))

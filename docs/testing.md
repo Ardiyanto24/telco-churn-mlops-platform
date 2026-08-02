@@ -11,3 +11,12 @@ All test names start with `test_` and must be deterministic, isolated, and free 
 | All | `py scripts/run_tests.py all` | Full suite; run in CI after M10 is added. |
 
 The `coverage/` directory is a generated artifact and is not committed. Intentional failure is verified with `py -m unittest tests.does_not_exist`, which must return non-zero.
+
+M6 training and candidate-artifact checks are included in the model suite. The
+complete candidate can be generated non-interactively in the locked runtime:
+
+```powershell
+docker run --rm --mount "type=bind,source=$((Get-Location).Path),target=/workspace" `
+  --workdir /workspace -e PYTHONPATH=/workspace/src `
+  telco-churn-m5-runtime:local python scripts/train_model.py
+```

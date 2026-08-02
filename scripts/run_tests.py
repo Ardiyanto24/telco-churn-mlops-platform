@@ -13,11 +13,11 @@ CATEGORIES = {
     "fast": ("test_settings.py", "test_dependency_lock.py"),
     "unit": ("test_settings.py", "test_dependency_lock.py"),
     "api": ("test_prediction_api.py",),
-    "model": ("test_preprocessing.py", "test_artifact_bundle.py", "test_data_contract.py"),
+    "model": ("test_preprocessing.py", "test_artifact_bundle.py", "test_data_contract.py", "test_training_pipeline.py"),
     "integration": ("test_baseline_runner.py", "test_prediction_api.py"),
     "all": (
         "test_settings.py", "test_dependency_lock.py", "test_data_contract.py", "test_import_graph.py",
-        "test_preprocessing.py", "test_artifact_bundle.py", "test_prediction_api.py",
+        "test_preprocessing.py", "test_artifact_bundle.py", "test_prediction_api.py", "test_training_pipeline.py",
         "test_baseline_runner.py",
     ),
 }

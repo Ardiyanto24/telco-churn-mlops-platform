@@ -1,0 +1,14 @@
+{
+  "run_name": "m6-logistic-v1",
+  "seed": 42,
+  "split": {
+    "train_fraction": 0.7,
+    "validation_fraction": 0.15,
+    "test_fraction": 0.15
+  },
+  "model": {
+    "type": "logistic_regression",
+    "C": 1.0,
+    "max_iter": 400
+  }
+}

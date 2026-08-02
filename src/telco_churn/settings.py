@@ -14,6 +14,7 @@ DEFAULT_PREPROCESSOR_FILENAME = "preprocessor.joblib"
 DEFAULT_DECISION_THRESHOLD = 0.6238
 DEFAULT_LOW_RISK_THRESHOLD = 0.35
 DEFAULT_HIGH_RISK_THRESHOLD = 0.75
+DEFAULT_CANDIDATE_RISK_MARGIN = 0.20
 
 
 class SettingsError(ValueError):
@@ -60,6 +61,16 @@ def _read_float(environ: Mapping[str, str], name: str, default: float) -> float:
         return float(raw_value)
     except ValueError as error:
         raise SettingsError(f"{name} must be numeric") from error
+
+
+def risk_bands_for_threshold(threshold: float) -> tuple[float, float]:
+    """Derive valid candidate risk bands around a validation-selected threshold."""
+    if not 0 < threshold < 1:
+        raise SettingsError("candidate decision threshold must be between 0 and 1")
+    return (
+        max(0.0, threshold - DEFAULT_CANDIDATE_RISK_MARGIN),
+        min(1.0, threshold + DEFAULT_CANDIDATE_RISK_MARGIN),
+    )
 
 
 def _validate(settings: Settings) -> None:

@@ -7,3 +7,4 @@ coverage/
 .dvc-tools/
 .env
 .env.local
+artifacts/candidates/
