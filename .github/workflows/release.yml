@@ -1,0 +1,58 @@
+name: Release control
+
+on:
+  workflow_dispatch:
+    inputs:
+      release_manifest:
+        description: "Tracked path to one immutable deployments/history manifest"
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: release-${{ inputs.release_manifest }}
+  cancel-in-progress: false
+
+jobs:
+  staging-review:
+    name: staging-review
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    environment: staging
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.10'}
+      - name: Validate immutable release manifest
+        env: {RELEASE_MANIFEST: ${{ inputs.release_manifest }}}
+        run: |
+          test -f "$RELEASE_MANIFEST"
+          PYTHONPATH=src python -c "import json, os; from pathlib import Path; from telco_churn.release_control import ReleaseManifest; print(ReleaseManifest.from_dict(json.loads(Path(os.environ['RELEASE_MANIFEST']).read_text())).release_id)"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: staging-release-manifest
+          path: ${{ inputs.release_manifest }}
+          retention-days: 30
+
+  production-simulated-approval:
+    name: production-simulated-approval
+    needs: staging-review
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    environment: production
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.10'}
+      - name: Record approved manifest identity
+        env: {RELEASE_MANIFEST: ${{ inputs.release_manifest }}}
+        run: |
+          test -f "$RELEASE_MANIFEST"
+          PYTHONPATH=src python -c "import hashlib, os; from pathlib import Path; print(hashlib.sha256(Path(os.environ['RELEASE_MANIFEST']).read_bytes()).hexdigest())" | tee approval-manifest-sha256.txt
+      - uses: actions/upload-artifact@v4
+        with:
+          name: production-simulated-approval
+          path: approval-manifest-sha256.txt
+          retention-days: 30
