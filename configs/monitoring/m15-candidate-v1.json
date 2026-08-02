@@ -1,0 +1,22 @@
+{
+  "categorical_methods": ["jensen_shannon", "eligible_chi_square"],
+  "fdr_q": 0.05,
+  "jensen_shannon_thresholds": [0.05, 0.1, 0.2],
+  "ks": "not_applicable_aggregate_reference",
+  "max_detection_windows": 2,
+  "max_prediction_rows": 10000,
+  "minimum_sample_size": 500,
+  "monitoring_config_schema": "telco-churn-monitoring-config/v1",
+  "monitoring_config_version": "5c80214e4a245a480e27ad5896ec53169ed53c3cef51d9f088a10b7d740705fa",
+  "multiple_testing": {"method": "benjamini-hochberg", "q": 0.05},
+  "numeric_methods": ["psi", "histogram_wasserstein"],
+  "prediction_method": "probability_psi",
+  "psi_thresholds": [0.1, 0.2, 0.3],
+  "quality_delta_thresholds": [0.01, 0.05, 0.15],
+  "seed": 20260803,
+  "sha256": "5c80214e4a245a480e27ad5896ec53169ed53c3cef51d9f088a10b7d740705fa",
+  "status": "candidate",
+  "target_false_positive_rate": 0.05,
+  "target_sensitivity": 0.8,
+  "wasserstein_thresholds": [0.05, 0.1, 0.2]
+}
