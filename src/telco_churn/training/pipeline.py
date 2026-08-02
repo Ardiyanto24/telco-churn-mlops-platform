@@ -51,9 +51,19 @@ class TrainingConfig:
     @classmethod
     def from_dict(cls, data: dict[str, Any]) -> "TrainingConfig":
         try:
+            model_data = data["model"]
+            if not isinstance(model_data, dict):
+                raise TypeError("model must be an object")
+            if "params" not in model_data:
+                # M6 wrote estimator parameters alongside ``type``. Preserve
+                # this read path so an immutable historical candidate remains
+                # reproducible for M8/M11 evaluation and rollback evidence.
+                model_data = {"type": model_data["type"], "params": {
+                    key: value for key, value in model_data.items() if key != "type"
+                }}
             config = cls(
                 run_name=str(data["run_name"]), seed=int(data["seed"]),
-                split=SplitConfig(**data["split"]), model=ModelConfig(**data["model"]),
+                split=SplitConfig(**data["split"]), model=ModelConfig(**model_data),
             )
         except (KeyError, TypeError, ValueError) as error:
             raise ValueError("training config is incomplete or invalid") from error
