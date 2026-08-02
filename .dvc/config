@@ -1,0 +1,6 @@
+[core]
+    remote = r2
+['remote "r2"']
+    url = s3://telco-churn-data
+    endpointurl = https://1e67cc4290dfdca4719a4c8d9228cb31.r2.cloudflarestorage.com
+    region = auto

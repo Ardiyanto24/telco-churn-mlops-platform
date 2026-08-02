@@ -1,0 +1,2 @@
+# M5 data-versioning CLI. This is separate from the serving runtime.
+dvc[s3]==3.67.1

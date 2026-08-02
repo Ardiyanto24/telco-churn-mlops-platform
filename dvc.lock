@@ -1,0 +1,28 @@
+schema: '2.0'
+stages:
+  validate_data:
+    cmd: python scripts/validate_dataset.py --input data/raw/telco_churn.csv
+      --output data/validated/telco_churn.csv --manifest
+      data/validated/dataset-manifest.json
+    deps:
+    - path: data/raw/telco_churn.csv
+      hash: md5
+      md5: 1c6cfe5e7567ac95bb13547da91f6ce7
+      size: 80512352
+    - path: scripts/validate_dataset.py
+      hash: md5
+      md5: 0a82eb7493fd2651c11fba7ea0d33019
+      size: 1509
+    - path: src/telco_churn/data_contract.py
+      hash: md5
+      md5: da7702e1eea54f662f3cc7d3377fedb8
+      size: 7092
+    outs:
+    - path: data/validated/dataset-manifest.json
+      hash: md5
+      md5: d1f7a7208d55161efc08216911740088
+      size: 309
+    - path: data/validated/telco_churn.csv
+      hash: md5
+      md5: 002da8e1837f7d7ca3990db01a371677
+      size: 81106547

@@ -22,3 +22,5 @@ Folder ini adalah catatan proses kerja per milestone. Ia berbeda dari `docs/mile
 - [M1 — Package foundation dan runtime lock](m1-package-foundation.md)
 - [M2 — Prediction API contract](m2-prediction-api-contract.md)
 - [M3 — Artifact contract dan model loading](m3-artifact-contract.md)
+- [M4 — Test foundation](m4-test-foundation.md)
+- [M5 — Data contract dan data versioning](m5-data-contract-and-versioning.md)

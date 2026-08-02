@@ -1,12 +1,12 @@
 # Progress Tracking — Telco Churn MLOps
 
-> Last updated: 2026-08-01
+> Last updated: 2026-08-02
 >
 > This is a short navigation and status document, not a substitute for evidence or detailed implementation history.
 
 ## Current snapshot
 
-- Overall program: **M0–M3 complete; M4 is the next recommended milestone.**
+- Overall program: **M0–M5 complete; M6 is the next recommended milestone.**
 - Current implementation foundation: Python package structure, validated settings, stable future transformer module path, reproducible Docker runtime, frozen legacy inference oracle, and a versioned Prediction API contract.
 - Active branch at last update: not recorded in the M2 evidence.
 - The legacy deployment remains isolated in `../legacy-deployment/` and is not yet replaced by the new package.
@@ -19,7 +19,9 @@
 | M1 | Package and configuration foundation | Done | Runtime lock tested with scikit-learn 1.6.1; M0 prediction scenarios remain identical. |
 | M2 | Prediction API contract | Done | Versioned schemas, health/version endpoints, validation, stable errors, OpenAPI snapshot, and M0 candidate verification recorded. |
 | M3 | Artifact contract and loading | Done | Immutable manifest, checksum verification, stable-path migration, and golden compatibility evidence recorded. |
-| M4–M21 | Remaining MLOps lifecycle | Not started | Follow dependency order in the implementation plan. |
+| M4 | Test foundation | Done | Categorized runner, isolated fixtures, coverage artifact support, and verification evidence recorded. |
+| M5 | Data contract and data versioning | Done | Real dataset validated, versioned in DVC, and synced to the Cloudflare R2 remote. |
+| M6–M21 | Remaining MLOps lifecycle | Not started | Follow dependency order in the implementation plan. |
 
 `Done` means the milestone has a completion report and recorded verification evidence. `Next` is a recommendation, not a claim that work has started.
 

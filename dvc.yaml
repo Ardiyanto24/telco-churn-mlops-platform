@@ -1,0 +1,14 @@
+stages:
+  validate_data:
+    cmd: >-
+      python scripts/validate_dataset.py
+      --input data/raw/telco_churn.csv
+      --output data/validated/telco_churn.csv
+      --manifest data/validated/dataset-manifest.json
+    deps:
+      - data/raw/telco_churn.csv
+      - scripts/validate_dataset.py
+      - src/telco_churn/data_contract.py
+    outs:
+      - data/validated/telco_churn.csv
+      - data/validated/dataset-manifest.json
