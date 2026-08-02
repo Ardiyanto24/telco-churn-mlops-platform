@@ -2,7 +2,7 @@
 
 ## Status
 
-Proposed
+Accepted
 
 ## Date
 
@@ -24,8 +24,9 @@ observability.
 
 ## Decision
 
-This ADR proposes the following thirteen M13 design decisions. They remain
-`provisional` until the ML Engineer accepts them before implementation.
+This ADR adopts the following thirteen M13 design decisions. Generated baseline
+artifacts themselves remain `provisional` until their reference population is
+reviewed for representativeness.
 
 ### 1. Baseline population: validated training split only
 
