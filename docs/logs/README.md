@@ -37,6 +37,7 @@ tetap dicatat walau sudah ditangani.
 
 ## Daftar log
 
+- [M12 structured telemetry dan prediction metadata](m12-structured-telemetry-and-prediction-metadata.md)
 - [M10 continuous integration](m10-continuous-integration.md)
 - [M11 staged release dan rollback](m11-staged-release-and-rollback.md)
 - [M9 container dan local runtime](m9-container-and-local-runtime.md)
