@@ -1,56 +1,42 @@
-# Progress Tracking — Telco Churn MLOps
+# Progress Tracking - Telco Churn MLOps
 
 > Last updated: 2026-08-02
 >
-> This is a short navigation and status document, not a substitute for evidence or detailed implementation history.
+> This is a concise status index. Completion reports and engineering logs hold
+> the detailed evidence.
 
 ## Current snapshot
 
-- Overall program: **M0–M5 complete; M6 is the next recommended milestone.**
-- Current implementation foundation: Python package structure, validated settings, stable future transformer module path, reproducible Docker runtime, frozen legacy inference oracle, and a versioned Prediction API contract.
-- Active branch at last update: not recorded in the M2 evidence.
-- The legacy deployment remains isolated in `../legacy-deployment/` and is not yet replaced by the new package.
+- Overall program: **M0-M7 complete; M8 is the next recommended milestone.**
+- The foundation now includes a verified legacy oracle, versioned data,
+  reproducible training, M3 artifact bundles, and local MLflow experiment
+  lineage/model registry.
+- The legacy deployment remains isolated in `../legacy-deployment/`; M7 does
+  not select a deployment or replace that service.
 
 ## Milestone status
 
 | Milestone | Area | Status | Notes |
 |---|---|---|---|
-| M0 | Legacy baseline | Done | Golden fixtures, snapshot, checksums, and Docker verifier recorded. |
-| M1 | Package and configuration foundation | Done | Runtime lock tested with scikit-learn 1.6.1; M0 prediction scenarios remain identical. |
-| M2 | Prediction API contract | Done | Versioned schemas, health/version endpoints, validation, stable errors, OpenAPI snapshot, and M0 candidate verification recorded. |
-| M3 | Artifact contract and loading | Done | Immutable manifest, checksum verification, stable-path migration, and golden compatibility evidence recorded. |
-| M4 | Test foundation | Done | Categorized runner, isolated fixtures, coverage artifact support, and verification evidence recorded. |
-| M5 | Data contract and data versioning | Done | Real dataset validated, versioned in DVC, and synced to the Cloudflare R2 remote. |
-| M6–M21 | Remaining MLOps lifecycle | Not started | Follow dependency order in the implementation plan. |
+| M0 | Legacy baseline | Done | Golden fixtures, snapshot, checksums, and Docker verifier. |
+| M1 | Package and configuration | Done | Stable package and locked scikit-learn 1.6.1 runtime. |
+| M2 | Prediction API contract | Done | Versioned HTTP schemas and stable errors. |
+| M3 | Artifact contract/loading | Done | Immutable manifest, checksums, stable-path migration. |
+| M4 | Test foundation | Done | Categorized runner, isolated fixtures, coverage support. |
+| M5 | Data contract/versioning | Done | Validated dataset, DVC lineage, R2 sync. |
+| M6 | Reproducible training | Done | Config-driven candidate bundles and deterministic training. |
+| M7 | Experiment tracking/registry | Done | MLflow SQLite lineage, immutable versions, candidate alias. |
+| M8-M21 | Remaining lifecycle | Not started | Follow dependency order in the implementation plan. |
 
-`Done` means the milestone has a completion report and recorded verification evidence. `Next` is a recommendation, not a claim that work has started.
+`Done` means a completion report with recorded verification evidence exists.
 
 ## Read this before working
 
-AI agents and contributors must read, in order:
+1. [AGENTS.md](AGENTS.md)
+2. [Implementation plan](MLOPS_IMPLEMENTATION_PLAN.md)
+3. Relevant architecture in [end-to-end design](MLOPS_END_TO_END_DESIGN.md)
+4. Relevant decisions in [docs/decisions](docs/decisions/)
+5. The latest log in [docs/logs](docs/logs/) and report in [docs/milestones](docs/milestones/)
 
-1. [AGENTS.md](AGENTS.md) — mandatory operating rules, repository boundaries, skills, testing, security, and Git conventions.
-2. [Implementation plan](MLOPS_IMPLEMENTATION_PLAN.md) — scope, dependencies, tests, and exit criteria for the target milestone.
-3. Relevant architecture sections in [end-to-end design](MLOPS_END_TO_END_DESIGN.md).
-4. Relevant decisions in [docs/decisions](docs/decisions/).
-5. The latest process log in [docs/logs](docs/logs/) and final report in [docs/milestones](docs/milestones/).
-
-At the beginning of **every milestone**, agents must use the `using-agent-skills` skill as required by `AGENTS.md`.
-
-## Documentation guide
-
-| Question | Read |
-|---|---|
-| What should the completed system look like? | [MLOPS_END_TO_END_DESIGN.md](MLOPS_END_TO_END_DESIGN.md) |
-| What is in/out of scope and how is success tested? | [MLOPS_IMPLEMENTATION_PLAN.md](MLOPS_IMPLEMENTATION_PLAN.md) |
-| Why was a technical direction chosen? | [docs/decisions](docs/decisions/) |
-| What actually happened while implementing a milestone? | [docs/logs](docs/logs/) |
-| What was delivered and verified at the end? | [docs/milestones](docs/milestones/) |
-| What must every agent follow? | [AGENTS.md](AGENTS.md) |
-
-## Rules for updating this file
-
-- Update the status only after the corresponding completion report has been verified.
-- Keep this document concise; link to detailed evidence rather than duplicating it.
-- If a milestone becomes blocked, state the blocker and link to the log/ADR with details.
-- Update `docs/logs/` during work and `docs/milestones/` when the milestone closes.
+At the beginning of every milestone, agents must use the `using-agent-skills`
+skill as required by `AGENTS.md`.

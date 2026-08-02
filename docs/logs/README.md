@@ -37,6 +37,8 @@ tetap dicatat walau sudah ditangani.
 
 ## Daftar log
 
+- [M7 experiment tracking dan model registry](m7-experiment-tracking-and-registry.md)
+
 - [M0 — Baseline legacy](m0-legacy-baseline.md)
 - [M1 — Package foundation dan runtime lock](m1-package-foundation.md)
 - [M2 — Prediction API contract](m2-prediction-api-contract.md)

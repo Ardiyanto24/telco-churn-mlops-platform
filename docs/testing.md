@@ -20,3 +20,11 @@ docker run --rm --mount "type=bind,source=$((Get-Location).Path),target=/workspa
   --workdir /workspace -e PYTHONPATH=/workspace/src `
   telco-churn-m6-runtime:local python scripts/train_model.py
 ```
+
+M7 registry checks are also included in the model suite and require the M7 image:
+
+```powershell
+docker run --rm --mount "type=bind,source=$((Get-Location).Path),target=/workspace,readonly" `
+  --workdir /workspace -e PYTHONPATH=/workspace/src `
+  --entrypoint python telco-churn-m7-runtime:local scripts/run_tests.py model
+```

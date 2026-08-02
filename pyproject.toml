@@ -12,6 +12,7 @@ dependencies = [
     "fastapi==0.141.1",
     "joblib==1.5.3",
     "lightgbm==4.7.0",
+    "mlflow==3.15.0",
     "numpy==2.2.6",
     "pandas==2.3.3",
     "pandera==0.32.1",
