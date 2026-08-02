@@ -9,7 +9,7 @@ from importlib.util import find_spec
 
 FASTAPI_AVAILABLE = find_spec("fastapi") is not None
 
-from telco_churn.telemetry import pseudonymous_entity_key
+from telco_churn.telemetry import ServiceMetrics, pseudonymous_entity_key
 
 if FASTAPI_AVAILABLE:
     from fastapi.testclient import TestClient
@@ -120,6 +120,15 @@ class TelemetryApiTests(unittest.TestCase):
 
 
 class TelemetryUnitTests(unittest.TestCase):
+    def test_metrics_render_latency_histogram_buckets(self) -> None:
+        metrics = ServiceMetrics()
+        metrics.observe_latency("request_latency_ms", 12.5)
+
+        rendered = metrics.render_openmetrics()
+
+        self.assertIn("request_latency_ms_count 1", rendered)
+        self.assertIn('request_latency_ms_bucket{le="25"} 1', rendered)
+
     def test_hmac_entity_key_is_stable_without_retaining_source_identifier(self) -> None:
         key = pseudonymous_entity_key("opaque-id-123", secret=b"test-secret", key_id="k1")
 
