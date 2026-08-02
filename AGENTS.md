@@ -24,7 +24,7 @@ The project plan is deliberately milestone-driven. The canonical architecture an
 2. **Use the `using-agent-skills` skill at the start of every milestone.** Discover and apply all relevant skills before taking task actions. Announce the skills being used and why.
 3. State any material assumptions before non-trivial implementation. If requirements conflict or a decision would change scope, stop and ask the user rather than guessing.
 4. Work in small, testable increments. For behavioral changes, write a failing test first, then implement the smallest change that passes.
-5. Record actual work in `docs/logs/m<id>-<slug>.md` as it happens: plan, actions, commands, findings, deviations, failures, decisions, and handoff. Do not reconstruct or claim activity without evidence.
+5. Record actual work in `docs/logs/m<id>-<slug>.md` as it happens, following the required trace categories in `docs/logs/README.md`: context/assumptions, plan, actions and evidence, findings, errors and handling, decisions/deviations, risks/limitations, artifacts/commits, and handoff. Do not reconstruct or claim activity without evidence.
 6. At milestone completion, update/create `docs/milestones/m<id>-<slug>-report.md` with deliverables, test evidence, exit criteria, ADR/config versions, limitations, and handoff.
 7. Run milestone-appropriate verification before committing. Review the diff for secrets, unintended files, and whitespace errors.
 8. Commit one focused logical change at a time with a descriptive Conventional Commit message. Do not commit generated caches, `.env` files, credentials, or customer data.
@@ -86,3 +86,19 @@ When changing package structure, dependencies, artifact loading, preprocessing, 
 | What was actually done during a milestone | `docs/logs/` |
 
 If this file conflicts with an explicit user instruction, follow the user instruction and record the divergence in the engineering log.
+
+## Documentation traceability rule
+
+Every milestone log must make it possible to answer: what was intended, what
+actually happened, why a decision changed, what failed, how it was handled, and
+what remains unresolved. Record each material item under these categories:
+
+1. **Context and assumptions** — scope, constraints, and assumptions that guide work.
+2. **Plan and actions** — work performed, relevant commands, and affected files.
+3. **Evidence and findings** — test output, measurements, inspected artifacts, or other verifiable facts.
+4. **Errors and handling** — symptom, likely/root cause when known, mitigation, verification, and unresolved impact.
+5. **Decisions and deviations** — choices that differ from a prior plan/design, their rationale, alternatives when material, and the authority/source of the decision.
+6. **Risks, limitations, and follow-up** — claims that cannot be made, missing inputs, technical debt, and the next owner/milestone.
+7. **Trace references** — config/data/model/artifact versions, commit IDs, issue/ADR links, and commands required to reproduce evidence.
+
+Create or update an ADR in `docs/decisions/` for a durable architectural decision. Logs may summarize it but must link to the ADR. Never record secrets or raw customer payloads.

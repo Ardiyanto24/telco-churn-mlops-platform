@@ -16,6 +16,25 @@ Folder ini adalah catatan proses kerja per milestone. Ia berbeda dari `docs/mile
 - Jangan mencatat secret, payload pelanggan, token, atau data sensitif.
 - Log tidak menggantikan ADR: keputusan arsitektur yang bertahan lama tetap dicatat di `docs/decisions/`.
 
+## Struktur trace wajib
+
+Setiap log milestone memakai heading yang relevan dari daftar berikut. Heading boleh
+digabung untuk pekerjaan kecil, tetapi tidak boleh menghilangkan fakta material.
+
+| Kategori | Wajib dicatat |
+|---|---|
+| Context dan assumptions | Tujuan, scope, constraint, dan asumsi yang dipakai. |
+| Plan dan actions | Langkah aktual, file yang diubah, serta command penting. |
+| Evidence dan findings | Hasil test, measurement, inspeksi artefak, atau bukti lain. |
+| Errors dan handling | Gejala, penyebab (jika diketahui), penanganan, hasil verifikasi, dan dampak tersisa. |
+| Decisions dan deviations | Keputusan yang berbeda dari rancangan/plan awal, alasan, alternatif material, serta sumber otoritasnya. |
+| Risks, limitations, follow-up | Klaim yang tidak dapat dibuat, dependency/keputusan yang belum ada, dan handoff ke milestone/owner berikutnya. |
+| Trace references | Versi config/data/model/artifact, commit, ADR, dan command reproduksi. |
+
+Untuk keputusan arsitektur yang tahan lama, buat atau perbarui ADR dan tautkan dari
+log. Jangan memakai log untuk menyembunyikan kegagalan: kegagalan yang relevan
+tetap dicatat walau sudah ditangani.
+
 ## Daftar log
 
 - [M0 — Baseline legacy](m0-legacy-baseline.md)
