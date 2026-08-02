@@ -345,7 +345,8 @@ Membuat training dapat dijalankan ulang dari data, kode, konfigurasi, dan seed y
 
 - Implementasikan tahap validate, split, preprocess, train, threshold selection, dan evaluate.
 - Pastikan transformer hanya fit pada split yang benar.
-- Definisikan config training dan seed.
+- Definisikan config training dan seed, termasuk `model.type` serta `model.params` yang versioned.
+- Implementasikan model factory dengan allowlist awal: Logistic Regression, LightGBM, XGBoost, dan Voting Ensemble; tidak ada model yang hard-coded sebagai satu-satunya kandidat.
 - Hasilkan model, preprocessor, manifest draft, metrics, dan plots.
 - Tambahkan CLI/entry point non-interaktif.
 
@@ -363,11 +364,13 @@ Membuat training dapat dijalankan ulang dari data, kode, konfigurasi, dan seed y
 3. Test set tidak digunakan saat fitting atau threshold selection.
 4. Pipeline gagal sebelum training ketika data contract gagal.
 5. Candidate bundle lengkap dan dapat dimuat oleh loader M3.
+6. Setiap model type yang didukung menghasilkan candidate bundle yang memuat model family dan parameter di metadata run.
 
 ### Exit criteria
 
 - Training selesai melalui satu command.
 - Semua input dan output run memiliki version/reference.
+- Model family dapat dipilih melalui config tanpa mengubah kode pipeline; serving tetap hanya menggunakan versi yang dipromosikan.
 - Tidak ada manual notebook state yang dibutuhkan.
 - Reproducibility tolerance terdokumentasi.
 
@@ -380,7 +383,7 @@ Mencatat lineage eksperimen dan mengelola lifecycle kandidat model.
 ### Ruang lingkup
 
 - Integrasikan MLflow tracking.
-- Log parameter, metrics, plots, data version, Git SHA, signature, dan artifact URIs.
+- Log model family, parameter, metrics, plots, data version, Git SHA, signature, dan artifact URIs.
 - Register model versions.
 - Definisikan tags/aliases untuk candidate, champion, dan archived lifecycle.
 - Pisahkan registry lifecycle dari deployment state.
@@ -399,6 +402,7 @@ Mencatat lineage eksperimen dan mengelola lifecycle kandidat model.
 3. Missing mandatory metadata menggagalkan registration step.
 4. Dua run tidak saling menimpa artefak.
 5. Model dapat diambil berdasarkan immutable version, bukan hanya alias.
+6. Registry menyimpan model family dan config version untuk setiap candidate.
 
 ### Exit criteria
 
@@ -416,6 +420,7 @@ Mencegah kandidat yang tidak memenuhi standar dipromosikan.
 
 - Definisikan primary dan supporting metrics.
 - Tambahkan absolute gates dan regression gates terhadap champion.
+- Bandingkan kandidat lintas model family menggunakan split evaluasi, objective, dan gate config yang sama.
 - Uji probability validity, feature compatibility, robustness, calibration, dan latency.
 - Hasilkan evaluation report serta model card.
 - Jadikan gate config versioned.

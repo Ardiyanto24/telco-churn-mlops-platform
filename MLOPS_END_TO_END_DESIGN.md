@@ -51,11 +51,12 @@ Fondasi serving sudah tersedia, tetapi lifecycle data, reproducible training, ex
 2. **Training-serving parity.** Kode transformasi untuk training dan inference berasal dari implementasi yang sama.
 3. **Immutable artifacts.** Artefak model yang sudah dirilis tidak ditimpa; perbaikan menghasilkan versi baru.
 4. **Promotion, bukan overwrite.** Kandidat berpindah dari candidate ke staging lalu production melalui evaluasi dan approval.
-5. **Monitoring bukan satu angka.** Data quality, data drift, prediction drift, service health, dan performance decay adalah sinyal berbeda.
-6. **Drift bukan bukti kegagalan model.** Drift memicu investigasi; penurunan performa aktual memerlukan label aktual.
-7. **Public by aggregation.** Sistem publik hanya menerima data terkurasi dan agregat, bukan akses langsung ke tools atau database internal.
-8. **Local-first, cloud-optional.** Seluruh stack inti harus dapat didemonstrasikan lokal dengan container; layanan online hanya untuk API dan visualisasi publik yang memang perlu diakses.
-9. **Secure by default.** Secret tidak disimpan di Git, endpoint internal tidak diekspos tanpa alasan, dan data pelanggan diminimalkan.
+5. **Model selectable, serving controlled.** Training memilih keluarga model dan parameternya melalui config versioned; serving hanya memuat satu bundle immutable yang telah dipromosikan, bukan model yang dipilih dari request API.
+6. **Monitoring bukan satu angka.** Data quality, data drift, prediction drift, service health, dan performance decay adalah sinyal berbeda.
+7. **Drift bukan bukti kegagalan model.** Drift memicu investigasi; penurunan performa aktual memerlukan label aktual.
+8. **Public by aggregation.** Sistem publik hanya menerima data terkurasi dan agregat, bukan akses langsung ke tools atau database internal.
+9. **Local-first, cloud-optional.** Seluruh stack inti harus dapat didemonstrasikan lokal dengan container; layanan online hanya untuk API dan visualisasi publik yang memang perlu diakses.
+10. **Secure by default.** Secret tidak disimpan di Git, endpoint internal tidak diekspos tanpa alasan, dan data pelanggan diminimalkan.
 
 ## 5. Arsitektur tingkat tinggi
 
@@ -224,6 +225,7 @@ Setiap training run minimal mencatat:
 - data contract version;
 - split seed dan strategi split;
 - environment/dependency version;
+- model family/type dan versi config model;
 - parameter model;
 - feature list dan feature engineering version;
 - preprocessor artifact URI/checksum;
@@ -233,7 +235,7 @@ Setiap training run minimal mencatat:
 - reference baseline URI/checksum;
 - timestamp dan run ID.
 
-Setiap release juga menghasilkan `model_manifest` yang menjadi kontrak antartraining dan serving. Manifest minimal berisi seluruh versi/checksum artefak, nama class/format serialisasi, versi Python dan library penting, input/output signature, threshold, risk bands, serta baseline ID. Serving menolak startup jika manifest tidak lengkap atau checksum tidak cocok.
+Setiap release juga menghasilkan `model_manifest` yang menjadi kontrak antartraining dan serving. Manifest minimal berisi seluruh versi/checksum artefak, model family, nama class/format serialisasi, versi Python dan library penting, input/output signature, threshold, risk bands, serta baseline ID. Serving menolak startup jika manifest tidak lengkap atau checksum tidak cocok.
 
 Joblib/pickle sensitif terhadap lokasi class dan versi library. Definisi transformer custom harus berada di module package yang stabil, bukan bergantung pada rebinding `__main__`. Dependency dikunci dan proses load artefak diuji di clean container. Untuk jangka panjang dapat dipertimbangkan format yang lebih portable, tetapi keputusan format tidak boleh mengorbankan preprocessing parity.
 
@@ -286,6 +288,14 @@ Risk label harus didefinisikan terpisah dari keputusan biner. Batas `High`, `Med
 
 ## 10. Training pipeline
 
+Training config harus memuat `model.type` dan `model.params`. Pipeline memakai
+model factory dengan allowlist eksplisit—awal: `logistic_regression`,
+`lightgbm`, `xgboost`, dan `voting_ensemble`—bukan model yang di-hard-code.
+Setiap tipe harus memenuhi prediction contract yang sama (`predict_proba` dan
+feature signature) sebelum dapat menjadi candidate bundle. Penambahan keluarga
+model baru memerlukan config schema, dependency yang terkunci, test bundle, dan
+metadata lineage; bukan pilihan model dari request inference.
+
 Tahapan pipeline yang disarankan:
 
 1. Resolve dataset dan config version.
@@ -314,7 +324,7 @@ Tahap lifecycle model:
 
 Istilah tersebut adalah state lifecycle milik sistem, bukan ketergantungan pada nama stage dari satu produk. Dalam MLflow, implementasinya dapat menggunakan registered model version, tags, dan aliases seperti `champion`/`candidate` sesuai versi MLflow yang dipilih. Dengan demikian rancangan tidak rusak jika API stage vendor berubah.
 
-Metadata model production harus memuat `model_version`, `run_id`, `git_sha`, `dataset_version`, `schema_version`, `baseline_version`, `threshold`, dan waktu promosi.
+Metadata model production harus memuat `model_version`, `model_family`, `run_id`, `git_sha`, `dataset_version`, `schema_version`, `baseline_version`, `threshold`, dan waktu promosi. Alias registry seperti `champion` hanya menunjuk satu immutable model version; perubahan model aktif dilakukan melalui promotion/deployment manifest, bukan parameter request API.
 
 Rollback harus mengubah referensi versi aktif ke artefak production sebelumnya. Rollback tidak melatih ulang model dan tidak mengganti isi artefak lama.
 
