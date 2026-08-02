@@ -75,6 +75,7 @@ class TelemetryEmitter:
     """Queue events so a failed or slow output sink cannot block inference."""
 
     sink: Callable[[str], None] = field(default=lambda line: _stdout_sink(line))
+    failure_sink: Callable[[str], None] = field(default=lambda line: _stderr_sink(line))
     metrics: ServiceMetrics = field(default_factory=ServiceMetrics)
     service_name: str = "telco-churn-api"
     environment: str = "local"
@@ -111,8 +112,24 @@ class TelemetryEmitter:
             except Exception:
                 # Do not recursively emit through the same failing boundary.
                 self.metrics.increment("telemetry_write_failures_total")
+                self._emit_failure_fallback(event)
             finally:
                 self._queue.task_done()
+
+    def _emit_failure_fallback(self, event: Mapping[str, Any]) -> None:
+        fallback = {
+            "telemetry_schema_version": TELEMETRY_SCHEMA_VERSION,
+            "event_name": "telemetry_write_failed",
+            "timestamp_utc": utc_timestamp(),
+            "service_name": self.service_name,
+            "environment": self.environment,
+            "failed_event_name": event["event_name"],
+        }
+        try:
+            self.failure_sink(json.dumps(fallback, sort_keys=True, separators=(",", ":")))
+        except Exception:
+            # The fallback is intentionally terminal to avoid recursive failure logging.
+            pass
 
 
 def utc_timestamp() -> str:
@@ -168,3 +185,8 @@ def _charges_bin(value: float) -> str:
 def _stdout_sink(line: str) -> None:
     sys.stdout.write(line + "\n")
     sys.stdout.flush()
+
+
+def _stderr_sink(line: str) -> None:
+    sys.stderr.write(line + "\n")
+    sys.stderr.flush()
