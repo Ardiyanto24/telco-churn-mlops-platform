@@ -1,0 +1,112 @@
+name: CI
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  fast:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.10', cache: pip, cache-dependency-path: requirements/runtime.lock}
+      - run: pip install -r requirements/runtime.lock
+      - run: PYTHONPATH=src python scripts/run_tests.py fast --coverage-dir coverage/fast
+      - run: |
+          if PYTHONPATH=src python -m unittest tests.does_not_exist; then exit 1; fi
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with: {name: fast-evidence, path: coverage/fast, retention-days: 14}
+
+  model:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: docker/setup-buildx-action@v3
+      - uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: docker/api.Dockerfile
+          tags: telco-churn-api:${{ github.sha }}
+          load: true
+          push: false
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+      - run: docker run --rm -e PYTHONPATH=/workspace/src -v "$PWD:/workspace:ro" -w /workspace telco-churn-api:${{ github.sha }} python scripts/run_tests.py model
+      - run: docker run --rm -e PYTHONPATH=/workspace/src -v "$PWD:/workspace:ro" -w /workspace telco-churn-api:${{ github.sha }} python -m unittest tests.test_evaluation_gates -v
+
+  container-smoke:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.10', cache: pip, cache-dependency-path: requirements/runtime.lock}
+      - run: pip install -r requirements/runtime.lock
+      - run: python scripts/create_ci_bundle.py --output ci-artifacts > ci-artifacts.json
+      - uses: docker/setup-buildx-action@v3
+      - uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: docker/api.Dockerfile
+          tags: telco-churn-api:${{ github.sha }}
+          load: true
+          push: false
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+      - name: Run Compose smoke test
+        run: |
+          export TELCO_CHURN_IMAGE_TAG=${{ github.sha }}
+          export TELCO_CHURN_BUNDLE_DIR="$PWD/ci-artifacts/candidate/bundle"
+          export TELCO_CHURN_DECISION_THRESHOLD=$(python -c "import json; print(json.load(open('ci-artifacts.json'))['threshold'])")
+          export TELCO_CHURN_LOW_RISK_THRESHOLD=$(python -c "import json; print(json.load(open('ci-artifacts.json'))['low'])")
+          export TELCO_CHURN_HIGH_RISK_THRESHOLD=$(python -c "import json; print(json.load(open('ci-artifacts.json'))['high'])")
+          docker compose up -d --wait api
+          curl --fail --silent http://127.0.0.1:8000/health/ready
+          docker compose down --volumes
+      - name: Verify invalid bundle stays unready
+        run: |
+          export TELCO_CHURN_IMAGE_TAG=${{ github.sha }}
+          export TELCO_CHURN_BUNDLE_DIR="$PWD/ci-artifacts"
+          if docker compose up --wait api; then docker compose down --volumes; exit 1; fi
+          docker compose down --volumes
+
+  security:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with: {fetch-depth: 0}
+      - uses: gitleaks/gitleaks-action@v2
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.10'}
+      - run: pip install pip-audit
+      - run: pip-audit -r requirements/runtime.lock
+      - uses: aquasecurity/trivy-action@0.28.0
+        with: {scan-type: fs, scan-ref: ., severity: CRITICAL,HIGH, format: cyclonedx, output: sbom.cdx.json, exit-code: '0'}
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with: {name: security-evidence, path: sbom.cdx.json, retention-days: 14}
+
+  required-checks:
+    if: always()
+    needs: [fast, model, container-smoke, security]
+    runs-on: ubuntu-latest
+    steps:
+      - run: test "${{ needs.fast.result }}" = success
+      - run: test "${{ needs.model.result }}" = success
+      - run: test "${{ needs.container-smoke.result }}" = success
+      - run: test "${{ needs.security.result }}" = success
