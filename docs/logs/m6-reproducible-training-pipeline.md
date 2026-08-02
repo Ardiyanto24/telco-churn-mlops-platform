@@ -2,7 +2,7 @@
 
 ## Scope dan asumsi
 
-- Kandidat M6 adalah `LogisticRegression`, bukan pengganti model production dan belum melewati promotion gate M8.
+- Kandidat awal M6 adalah `LogisticRegression`; asumsi ini digantikan oleh keputusan multi-model pada bagian revisi di bawah. Tidak ada kandidat M6 yang menggantikan model production atau melewati promotion gate M8.
 - Split stratified dikonfigurasi 70% train, 15% validation, dan 15% test dengan seed `42`.
 - Preprocessor hanya di-fit pada train; threshold F1 hanya dipilih dari validation; metric final hanya berasal dari test.
 
@@ -35,6 +35,7 @@
   LightGBM dan dua XGBoost berbobot `5/3/1`; Logistic Regression tetap kandidat
   mandiri. Dokumentasi lama yang menyebut Logistic Regression sebagai anggota
   ensemble dikoreksi.
+- Bukti keputusan diperoleh dengan memuat artefak legacy secara read-only pada container baseline dan membaca `VotingClassifier.get_params()`. Artefak hanya menyimpan estimator, bukan resep SMOTE; karena itu kandidat M6 mereproduksi komposisi/bobot/hyperparameter estimator, bukan training legacy bit-for-bit.
 - Menambahkan model factory untuk empat `model.type`, contoh config masing-masing,
   metadata `model_family`, dan manifest v2. Loader tetap menerima manifest v1
   legacy dengan family `legacy_unknown`.
@@ -42,3 +43,4 @@
   LightGBM tidak dapat diimpor pada image M5 tanpa runtime OpenMP.
 - Tes RED gagal seperti diharapkan sebelum factory/model family tersedia; tes
   GREEN multi-model lulus 19 tests di image M6.
+- Hasil full-data Logistic Regression yang dicatat sebelumnya adalah bukti pipeline awal dan tidak boleh dipakai sebagai hasil ensemble default baru.
