@@ -8,14 +8,16 @@ from pathlib import Path
 import unittest
 
 
-RUNTIME_AVAILABLE = all(find_spec(name) for name in ("joblib", "pandas", "pandera", "sklearn"))
+RUNTIME_AVAILABLE = all(
+    find_spec(name) for name in ("joblib", "lightgbm", "pandas", "pandera", "sklearn", "xgboost")
+)
 
 if RUNTIME_AVAILABLE:
     import pandas as pd
 
     from telco_churn.artifacts import VerifiedArtifactLoader
     from telco_churn.data_contract import build_dataset_manifest, write_dataset_manifest
-    from telco_churn.training.pipeline import TrainingConfig, run_training
+    from telco_churn.training.pipeline import TrainingConfig, build_model, run_training
 
 
 @unittest.skipUnless(RUNTIME_AVAILABLE, "requires the locked M6 runtime")
@@ -38,11 +40,22 @@ class TrainingPipelineTests(unittest.TestCase):
             })
         return pd.DataFrame(records)
 
-    def _config(self) -> TrainingConfig:
+    def _config(self, model_type: str = "logistic_regression") -> TrainingConfig:
+        params = {
+            "logistic_regression": {"C": 1.0, "max_iter": 200},
+            "lightgbm": {"n_estimators": 3, "n_jobs": 1},
+            "xgboost": {"n_estimators": 3, "max_depth": 2, "n_jobs": 1},
+            "voting_ensemble": {
+                "weights": [5, 3, 1],
+                "lightgbm": {"n_estimators": 3, "n_jobs": 1},
+                "xgboost_class_weight": {"n_estimators": 3, "max_depth": 2, "n_jobs": 1},
+                "xgboost_smote": {"n_estimators": 3, "max_depth": 2, "n_jobs": 1},
+            },
+        }
         return TrainingConfig.from_dict({
             "run_name": "m6-test", "seed": 42,
             "split": {"train_fraction": 0.70, "validation_fraction": 0.15, "test_fraction": 0.15},
-            "model": {"type": "logistic_regression", "C": 1.0, "max_iter": 200},
+            "model": {"type": model_type, "params": params[model_type]},
         })
 
     def _verified_data(self, workspace: Path) -> tuple[Path, Path]:
@@ -67,6 +80,17 @@ class TrainingPipelineTests(unittest.TestCase):
                 "m6-test",
             )
 
+    def test_each_supported_model_type_produces_a_loadable_bundle_with_its_family(self) -> None:
+        from tests.support import temporary_workspace
+
+        with temporary_workspace() as workspace:
+            dataset, manifest = self._verified_data(workspace)
+            for model_type in ("logistic_regression", "lightgbm", "xgboost", "voting_ensemble"):
+                result = run_training(self._config(model_type), dataset, manifest, workspace / model_type)
+                bundle = VerifiedArtifactLoader().load(result.output_dir / "bundle")
+                self.assertEqual(bundle.manifest.model_family, model_type)
+                self.assertTrue(callable(getattr(build_model(self._config(model_type)), "predict_proba", None)))
+
     def test_run_records_strict_split_boundaries(self) -> None:
         from tests.support import temporary_workspace
 
@@ -90,13 +114,14 @@ class TrainingPipelineTests(unittest.TestCase):
             changed = TrainingConfig.from_dict({
                 "run_name": "m6-test-seed-99", "seed": 99,
                 "split": {"train_fraction": 0.70, "validation_fraction": 0.15, "test_fraction": 0.15},
-                "model": {"type": "logistic_regression", "C": 1.0, "max_iter": 200},
+                "model": {"type": "logistic_regression", "params": {"C": 1.0, "max_iter": 200}},
             })
             second = run_training(changed, dataset, manifest, workspace / "second")
 
             first_record = json.loads((first.output_dir / "training_run.json").read_text(encoding="utf-8"))
             second_record = json.loads((second.output_dir / "training_run.json").read_text(encoding="utf-8"))
             self.assertNotEqual(first_record["config"]["seed"], second_record["config"]["seed"])
+            self.assertEqual(first_record["model_family"], "logistic_regression")
 
     def test_contract_failure_halts_before_creating_output(self) -> None:
         from tests.support import temporary_workspace

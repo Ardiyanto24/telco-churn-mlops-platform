@@ -1,0 +1,14 @@
+{
+  "run_name": "m6-legacy-voting-v1",
+  "seed": 42,
+  "split": {"train_fraction": 0.7, "validation_fraction": 0.15, "test_fraction": 0.15},
+  "model": {
+    "type": "voting_ensemble",
+    "params": {
+      "weights": [5, 3, 1],
+      "lightgbm": {"class_weight": "balanced", "colsample_bytree": 0.608943363327166, "learning_rate": 0.07967971181580208, "max_depth": 4, "min_child_samples": 78, "n_estimators": 879, "num_leaves": 94, "reg_alpha": 0.7999026424605257, "reg_lambda": 0.6026706801963496, "subsample": 0.6398810197714346},
+      "xgboost_class_weight": {"colsample_bylevel": 0.9820966144080236, "colsample_bytree": 0.6476132479952832, "gamma": 0.8519400413429601, "learning_rate": 0.027409152037272587, "max_depth": 7, "min_child_weight": 4, "n_estimators": 963, "reg_alpha": 1.6434714912804622, "reg_lambda": 4.197782334999492, "scale_pos_weight": 3.4403343581860106, "subsample": 0.7329629279892032},
+      "xgboost_smote": {"colsample_bylevel": 0.6131052175747906, "colsample_bytree": 0.678226972302615, "gamma": 0.42353539243103655, "learning_rate": 0.013207780077891609, "max_depth": 8, "min_child_weight": 50, "n_estimators": 739, "reg_alpha": 1.2379449556158246, "reg_lambda": 4.134383445906311, "subsample": 0.6110140504037365}
+    }
+  }
+}

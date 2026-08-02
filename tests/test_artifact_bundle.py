@@ -42,6 +42,7 @@ class VerifiedArtifactLoaderTests(unittest.TestCase):
         write_manifest(
             directory,
             model_version="legacy-migrated-v1",
+            model_family="legacy_voting_ensemble",
             schema_version="v1",
             baseline_id="m0-legacy-snapshot-v1",
             feature_order=["feature_a", "feature_b"],
@@ -58,6 +59,7 @@ class VerifiedArtifactLoaderTests(unittest.TestCase):
             loaded = VerifiedArtifactLoader().load(bundle)
 
             self.assertEqual(loaded.manifest.model_version, "legacy-migrated-v1")
+            self.assertEqual(loaded.manifest.model_family, "legacy_voting_ensemble")
             self.assertEqual(loaded.predict_probabilities([{"value": "unused"}]), [0.8])
 
     def test_rejects_a_tampered_artifact_before_deserialization(self) -> None:

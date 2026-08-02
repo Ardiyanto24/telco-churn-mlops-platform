@@ -12,6 +12,7 @@ from typing import Any
 import joblib
 import numpy as np
 from sklearn.linear_model import LogisticRegression
+from sklearn.ensemble import VotingClassifier
 from sklearn.metrics import average_precision_score, f1_score, precision_recall_curve, roc_auc_score
 from sklearn.model_selection import train_test_split
 
@@ -19,6 +20,8 @@ from telco_churn.artifacts import write_manifest
 from telco_churn.data_contract import TARGET_COLUMN, load_verified_dataset
 from telco_churn.preprocessing import PreprocessingPipeline
 from telco_churn.settings import risk_bands_for_threshold
+from lightgbm import LGBMClassifier
+from xgboost import XGBClassifier
 
 
 @dataclass(frozen=True)
@@ -31,8 +34,7 @@ class SplitConfig:
 @dataclass(frozen=True)
 class ModelConfig:
     type: str
-    C: float
-    max_iter: int
+    params: dict[str, Any]
 
 
 @dataclass(frozen=True)
@@ -55,10 +57,10 @@ class TrainingConfig:
             )
         except (KeyError, TypeError, ValueError) as error:
             raise ValueError("training config is incomplete or invalid") from error
-        if not config.run_name or config.model.type != "logistic_regression":
+        if not config.run_name or config.model.type not in {"logistic_regression", "lightgbm", "xgboost", "voting_ensemble"}:
             raise ValueError("training config has an unsupported run or model type")
-        if config.model.C <= 0 or config.model.max_iter <= 0:
-            raise ValueError("logistic regression parameters must be positive")
+        if not isinstance(config.model.params, dict):
+            raise ValueError("model params must be an object")
         fractions = config.split
         if min(fractions.train_fraction, fractions.validation_fraction, fractions.test_fraction) <= 0:
             raise ValueError("split fractions must be positive")
@@ -87,7 +89,7 @@ def run_training(config: TrainingConfig, dataset: Path, manifest_path: Path, out
     train_features = preprocessor.transform(train_x)
     validation_features = preprocessor.transform(validation_x)
     test_features = preprocessor.transform(test_x)
-    model = LogisticRegression(C=config.model.C, max_iter=config.model.max_iter, random_state=config.seed)
+    model = build_model(config)
     model.fit(train_features, train_y)
 
     validation_probabilities = model.predict_proba(validation_features)[:, 1]
@@ -103,7 +105,7 @@ def run_training(config: TrainingConfig, dataset: Path, manifest_path: Path, out
     joblib.dump(preprocessor, bundle_dir / "preprocessor.joblib")
     dataset_manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
     write_manifest(
-        bundle_dir, model_version=config.run_name, schema_version="v1",
+        bundle_dir, model_version=config.run_name, model_family=config.model.type, schema_version="v1",
         baseline_id=f"m6-dataset-{dataset_manifest['sha256'][:12]}",
         feature_order=preprocessor._last_output_columns_, decision_threshold=threshold,
         low_risk_threshold=low_risk_threshold, high_risk_threshold=high_risk_threshold,
@@ -111,7 +113,7 @@ def run_training(config: TrainingConfig, dataset: Path, manifest_path: Path, out
     (output_dir / "metrics.json").write_text(json.dumps(metrics, indent=2, sort_keys=True) + "\n", encoding="utf-8")
     _write_plot(output_dir / "plots" / "precision_recall.svg", precision, recall)
     record = {
-        "config": asdict(config), "dataset_manifest": dataset_manifest,
+        "config": asdict(config), "model_family": config.model.type, "dataset_manifest": dataset_manifest,
         "code_revision": _git_revision(), "fit_split": "train",
         "threshold_selection_split": "validation", "evaluation_split": "test",
         "split_row_counts": {"train": len(train_x), "validation": len(validation_x), "test": len(test_x)},
@@ -120,6 +122,37 @@ def run_training(config: TrainingConfig, dataset: Path, manifest_path: Path, out
     }
     (output_dir / "training_run.json").write_text(json.dumps(record, indent=2, sort_keys=True) + "\n", encoding="utf-8")
     return TrainingResult(output_dir=output_dir, metrics=metrics)
+
+
+def build_model(config: TrainingConfig):
+    """Create an unfitted, allowlisted estimator from versioned training config."""
+    params = config.model.params
+    if config.model.type == "logistic_regression":
+        return LogisticRegression(random_state=config.seed, **params)
+    if config.model.type == "lightgbm":
+        return _lightgbm(params, config.seed)
+    if config.model.type == "xgboost":
+        return _xgboost(params, config.seed)
+    required = {"lightgbm", "xgboost_class_weight", "xgboost_smote"}
+    if not required.issubset(params):
+        raise ValueError("voting_ensemble requires lightgbm and two xgboost parameter objects")
+    return VotingClassifier(
+        estimators=[
+            ("lightgbm", _lightgbm(params["lightgbm"], config.seed)),
+            ("xgboost_class_weight", _xgboost(params["xgboost_class_weight"], config.seed)),
+            ("xgboost_smote", _xgboost(params["xgboost_smote"], config.seed)),
+        ], voting="soft", weights=params.get("weights", [5, 3, 1]), n_jobs=1,
+    )
+
+
+def _lightgbm(params: dict[str, Any], seed: int) -> LGBMClassifier:
+    values = {"random_state": seed, "verbosity": -1, **params}
+    return LGBMClassifier(**values)
+
+
+def _xgboost(params: dict[str, Any], seed: int) -> XGBClassifier:
+    values = {"random_state": seed, "objective": "binary:logistic", "eval_metric": "aucpr", "n_jobs": 1, **params}
+    return XGBClassifier(**values)
 
 
 def _split(features, target, config: TrainingConfig):

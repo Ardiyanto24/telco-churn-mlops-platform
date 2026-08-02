@@ -9,10 +9,10 @@ import sys
 
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--config", type=Path, default=Path("configs/training/m6-logistic-v1.json"))
+    parser.add_argument("--config", type=Path, default=Path("configs/training/m6-legacy-voting-v1.json"))
     parser.add_argument("--dataset", type=Path, default=Path("data/validated/telco_churn.csv"))
     parser.add_argument("--manifest", type=Path, default=Path("data/validated/dataset-manifest.json"))
-    parser.add_argument("--output", type=Path, default=Path("artifacts/candidates/m6-logistic-v1"))
+    parser.add_argument("--output", type=Path, default=Path("artifacts/candidates/m6-legacy-voting-v1"))
     args = parser.parse_args()
     root = Path(__file__).resolve().parents[1]
     sys.path.insert(0, str(root / "src"))

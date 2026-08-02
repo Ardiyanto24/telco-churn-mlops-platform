@@ -28,3 +28,17 @@
 ## Handoff
 
 - M7 harus meregistrasikan metadata `training_run.json`, manifest bundle, dan artifact URI sebagai run immutable; M6 tidak menyediakan registry atau gate.
+
+## Revisi multi-model — 2026-08-02
+
+- Keputusan pengguna: ensemble default mengikuti artefak legacy aktual, yaitu
+  LightGBM dan dua XGBoost berbobot `5/3/1`; Logistic Regression tetap kandidat
+  mandiri. Dokumentasi lama yang menyebut Logistic Regression sebagai anggota
+  ensemble dikoreksi.
+- Menambahkan model factory untuk empat `model.type`, contoh config masing-masing,
+  metadata `model_family`, dan manifest v2. Loader tetap menerima manifest v1
+  legacy dengan family `legacy_unknown`.
+- Image `telco-churn-m6-runtime:local` menambahkan `libgomp1`, karena wheel
+  LightGBM tidak dapat diimpor pada image M5 tanpa runtime OpenMP.
+- Tes RED gagal seperti diharapkan sebelum factory/model family tersedia; tes
+  GREEN multi-model lulus 19 tests di image M6.

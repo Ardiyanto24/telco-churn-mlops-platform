@@ -36,7 +36,7 @@ Komponen berikut tidak menjadi prioritas fase pertama:
 
 Sistem saat ini terdiri dari:
 
-- `model_final.joblib`: Voting Ensemble LightGBM, XGBoost, dan Logistic Regression.
+- `model_final.joblib`: Voting Ensemble LightGBM, XGBoost class-weight, dan XGBoost yang sebelumnya dilatih pada data SMOTE; bobot soft-voting `5/3/1`.
 - `preprocessor.joblib`: pipeline preprocessing custom.
 - `handler.py`: pemuatan artefak, parsing payload, preprocessing, inferensi, threshold, dan respons.
 - `main.py`: FastAPI untuk health/status sederhana dan endpoint prediksi.

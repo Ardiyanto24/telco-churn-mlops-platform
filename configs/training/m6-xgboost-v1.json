@@ -1,0 +1,1 @@
+{"run_name":"m6-xgboost-v1","seed":42,"split":{"train_fraction":0.7,"validation_fraction":0.15,"test_fraction":0.15},"model":{"type":"xgboost","params":{"n_estimators":300,"max_depth":6,"learning_rate":0.05,"n_jobs":1}}}

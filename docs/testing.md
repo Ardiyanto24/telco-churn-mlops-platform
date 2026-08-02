@@ -18,5 +18,5 @@ complete candidate can be generated non-interactively in the locked runtime:
 ```powershell
 docker run --rm --mount "type=bind,source=$((Get-Location).Path),target=/workspace" `
   --workdir /workspace -e PYTHONPATH=/workspace/src `
-  telco-churn-m5-runtime:local python scripts/train_model.py
+  telco-churn-m6-runtime:local python scripts/train_model.py
 ```

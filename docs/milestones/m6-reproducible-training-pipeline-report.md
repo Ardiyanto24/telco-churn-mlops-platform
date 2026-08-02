@@ -10,6 +10,8 @@ Verified on 2026-08-02.
 - Versioned deterministic config in `configs/training/m6-logistic-v1.json`.
 - Stratified train/validation/test split with explicit seed, train-only fitting, validation-only threshold selection, and test-only final evaluation.
 - Candidate bundle compatible with the M3 verified artifact loader, plus `metrics.json`, `training_run.json`, and precision-recall SVG.
+- Configurable model factory for Logistic Regression, LightGBM, XGBoost, and the
+  legacy-composition Voting Ensemble. Each candidate records `model_family`.
 
 ## Reproducibility contract
 
@@ -23,7 +25,7 @@ The generated local candidate (`artifacts/candidates/m6-logistic-v1/`) used the 
 
 | Check | Result |
 |---|---|
-| M6 model/contract suite | 18 passed in `telco-churn-m5-runtime:local`. |
+| Multi-model M6 model/contract suite | 19 passed in `telco-churn-m6-runtime:local`. |
 | Full M6 CLI | Completed in 155.5 seconds from commit `e4da1aa`. |
 | M3 loader on final candidate | Loaded successfully; 29 features. |
 | Broad regression suite | 41 passed; one baseline integration cannot invoke Docker from inside the verification container, unrelated to M6. |

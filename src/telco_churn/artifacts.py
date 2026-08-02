@@ -33,6 +33,7 @@ class ArtifactLoadError(RuntimeError):
 @dataclass(frozen=True)
 class ArtifactManifest:
     model_version: str
+    model_family: str
     schema_version: str
     baseline_id: str
     feature_order: tuple[str, ...]
@@ -56,8 +57,12 @@ class ArtifactManifest:
             "manifest_version", "model_version", "schema_version", "baseline_id",
             "feature_order", "decision_threshold", "risk_bands", "artifacts", "runtime",
         }
-        if set(data) != required or data["manifest_version"] != 1:
+        version = data.get("manifest_version")
+        if version == 2:
+            required = required | {"model_family"}
+        if set(data) != required or version not in (1, 2):
             raise ArtifactLoadError("model manifest has an unsupported schema")
+        model_family = data.get("model_family", "legacy_unknown")
         feature_order = data["feature_order"]
         if not isinstance(feature_order, list) or not feature_order or not all(
             isinstance(feature, str) and feature for feature in feature_order
@@ -92,8 +97,10 @@ class ArtifactManifest:
         for key in ("model_version", "schema_version", "baseline_id"):
             if not isinstance(data[key], str) or not data[key]:
                 raise ArtifactLoadError("model manifest has invalid release metadata")
+        if not isinstance(model_family, str) or not model_family:
+            raise ArtifactLoadError("model manifest has an invalid model family")
         return cls(
-            model_version=data["model_version"], schema_version=data["schema_version"],
+            model_version=data["model_version"], model_family=model_family, schema_version=data["schema_version"],
             baseline_id=data["baseline_id"], feature_order=tuple(feature_order),
             decision_threshold=threshold, low_risk_threshold=low, high_risk_threshold=high,
             artifacts=artifacts, runtime=runtime,
@@ -156,7 +163,7 @@ class VerifiedArtifactLoader:
 
 
 def write_manifest(
-    bundle_dir: Path, *, model_version: str, schema_version: str, baseline_id: str,
+    bundle_dir: Path, *, model_version: str, model_family: str, schema_version: str, baseline_id: str,
     feature_order: list[str], decision_threshold: float, low_risk_threshold: float,
     high_risk_threshold: float,
 ) -> Path:
@@ -165,7 +172,7 @@ def write_manifest(
     if manifest_path.exists():
         raise ArtifactLoadError("artifact releases are immutable; manifest already exists")
     data = {
-        "manifest_version": 1, "model_version": model_version, "schema_version": schema_version,
+        "manifest_version": 2, "model_version": model_version, "model_family": model_family, "schema_version": schema_version,
         "baseline_id": baseline_id, "feature_order": feature_order,
         "decision_threshold": decision_threshold,
         "risk_bands": {"low": low_risk_threshold, "high": high_risk_threshold},
@@ -246,7 +253,7 @@ def migrate_legacy_bundle(
         shutil.rmtree(destination_dir)
         raise ArtifactLoadError("legacy preprocessor has no fitted feature signature")
     return write_manifest(
-        destination_dir, model_version=model_version, schema_version=schema_version,
+        destination_dir, model_version=model_version, model_family="legacy_voting_ensemble", schema_version=schema_version,
         baseline_id=baseline_id, feature_order=feature_order,
         decision_threshold=decision_threshold, low_risk_threshold=low_risk_threshold,
         high_risk_threshold=high_risk_threshold,

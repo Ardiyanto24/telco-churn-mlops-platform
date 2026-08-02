@@ -8,7 +8,9 @@
   },
   "model": {
     "type": "logistic_regression",
-    "C": 1.0,
-    "max_iter": 400
+    "params": {
+      "C": 1.0,
+      "max_iter": 400
+    }
   }
 }
