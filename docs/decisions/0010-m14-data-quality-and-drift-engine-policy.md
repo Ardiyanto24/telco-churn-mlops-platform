@@ -26,6 +26,27 @@ claiming production alerts.
 
 M14 adopts the following twenty decisions.
 
+### Baseline-evolution note
+
+M14 uses the existing aggregate-only M13 baseline. It supports PSI and
+histogram-weighted distribution comparisons but cannot provide a valid raw
+two-sample KS test. This is an intentional privacy and portability trade-off,
+not an implicit claim that all drift methods are available.
+
+Data-quality and input-feature calculations use the complete supplied window.
+Prediction drift uses a deterministic, checksum-seeded sample capped at 10,000
+rows in the initial experimental configuration. The report records that sample
+size and the cap is part of the idempotency configuration identity. This bounds
+the cost of model re-scoring while preserving full-batch input observability;
+M15 must calibrate whether the cap is representative for an operational window.
+
+M15 may supersede this policy if calibration shows that aggregate evidence is
+insufficient for a material drift scenario. That change must create a new
+baseline schema/artifact version and ADR, preserve the old baseline and its
+reports, document any added feature-level sample-retention boundary, and make
+the selected method explicit in each report. Existing immutable baseline
+artifacts must never be edited in place.
+
 ### 1. Primary current-data source: validated internal batch
 
 Use a schema-validated internal batch as the primary source for full raw-feature
@@ -265,6 +286,8 @@ block the measurements M15 needs to perform calibration.
   hard-code unvalidated production thresholds.
 - M15 can calibrate concrete sample minima, windows, test selection, FDR, and
   severity thresholds from M14 reports and controlled experiments.
+- A future baseline with bounded feature-level samples remains possible, but it
+  is a new governed baseline version rather than a mutation of M13 evidence.
 - M17 must not turn M14 experimental severities into operational alerts without
   the approved M15 configuration and its own persistence policy.
 
