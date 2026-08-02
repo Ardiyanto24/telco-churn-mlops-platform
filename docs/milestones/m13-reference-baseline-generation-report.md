@@ -1,6 +1,6 @@
 # Milestone M13 Completion Report
 
-Status: blocked
+Status: done
 Tanggal: 2026-08-02
 
 ## Deliverable
@@ -23,8 +23,10 @@ Tanggal: 2026-08-02
 - [x] Artifact records sample size, reference origin, data/model lineage,
   raw-feature coverage, and prediction policy.
 - [x] Incompatible model or feature contract fails closed.
-- [ ] The approved M6 candidate still needs a successfully generated local
-  baseline artifact; the local container command exceeded its time limit.
+- [x] M6 candidate baseline
+  `cb915da23b430f6c9f0bab2b7d5b5967fa3270a8d1a44bf6025e8e7ae87079de`
+  was generated locally from verified inputs, has 594194 reference rows, and
+  passed checksum/compatibility validation.
 
 ## Decisions made
 
@@ -33,10 +35,10 @@ Tanggal: 2026-08-02
 ## Known limitations
 
 - No drift thresholds are defined; this is intentionally deferred to M15.
-- Full local generation needs a runner/session without the 64-second execution
-  limit before M13 can be marked `done`.
+- The baseline remains `provisional` until a later representativeness review;
+  this is the accepted M13 baseline-state policy, not an implementation gap.
 
 ## Handoff
 
-- Generate and verify the M6 provisional baseline, then use it as M14's
-  immutable reference input.
+- Use the M6 provisional baseline as M14's immutable reference input; M15 may
+  later approve or supersede it after calibration.

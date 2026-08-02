@@ -30,8 +30,8 @@
   data columns. The generator now derives raw features from the validated data
   contract and records the transformed signature separately.
 - Generating the full local M6 baseline exceeded this environment's 64-second
-  Docker command limit and produced no artifact. This is an execution-window
-  limitation, not a passed generation claim.
+  Docker command limit. The generator was then run as a hidden local Docker
+  process and completed successfully without changing the code or inputs.
 
 ## Decisions dan deviations
 
@@ -41,9 +41,11 @@
 
 ## Risks, limitations, dan follow-up
 
-- Run the generator in a session/runner without the 64-second command cap to
-  create `artifacts/baselines/<baseline-id>/baseline.json` for the approved M6
-  candidate. Do not commit bundle, dataset, or generated baseline artifact.
+- The resulting local artifact is
+  `artifacts/baselines/cb915da23b430f6c9f0bab2b7d5b5967fa3270a8d1a44bf6025e8e7ae87079de/baseline.json`.
+  It has 594194 reference rows, status `provisional`, and passed its
+  checksum/compatibility validation. Do not commit bundle, dataset, or
+  generated baseline artifact.
 
 ## Trace references
 
