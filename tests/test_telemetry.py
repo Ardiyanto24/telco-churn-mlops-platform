@@ -9,7 +9,7 @@ from importlib.util import find_spec
 
 FASTAPI_AVAILABLE = find_spec("fastapi") is not None
 
-from telco_churn.telemetry import ServiceMetrics, pseudonymous_entity_key
+from telco_churn.telemetry import ServiceMetrics, TelemetryEmitter, pseudonymous_entity_key
 
 if FASTAPI_AVAILABLE:
     from fastapi.testclient import TestClient
@@ -17,7 +17,6 @@ if FASTAPI_AVAILABLE:
     from telco_churn.api.app import create_app
     from telco_churn.api.service import PredictionService
     from telco_churn.settings import load_settings
-    from telco_churn.telemetry import TelemetryEmitter
 
 
 VALID_CUSTOMER = {
@@ -128,6 +127,22 @@ class TelemetryUnitTests(unittest.TestCase):
 
         self.assertIn("request_latency_ms_count 1", rendered)
         self.assertIn('request_latency_ms_bucket{le="25"} 1', rendered)
+
+    def test_sink_failure_emits_one_safe_non_recursive_fallback_event(self) -> None:
+        fallback_lines: list[str] = []
+        emitter = TelemetryEmitter(
+            sink=lambda _: (_ for _ in ()).throw(OSError("sink unavailable")),
+            failure_sink=fallback_lines.append,
+        )
+
+        emitter.emit("prediction_completed", request_id="request-123", customer_id="must-not-leak")
+        emitter.flush()
+
+        self.assertEqual(emitter.metrics.value("telemetry_write_failures_total"), 1)
+        fallback = json.loads(fallback_lines[0])
+        self.assertEqual(fallback["event_name"], "telemetry_write_failed")
+        self.assertEqual(fallback["failed_event_name"], "prediction_completed")
+        self.assertNotIn("must-not-leak", json.dumps(fallback))
 
     def test_hmac_entity_key_is_stable_without_retaining_source_identifier(self) -> None:
         key = pseudonymous_entity_key("opaque-id-123", secret=b"test-secret", key_id="k1")
