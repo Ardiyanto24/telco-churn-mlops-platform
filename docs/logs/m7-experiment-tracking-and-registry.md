@@ -53,5 +53,6 @@
 
 - MLflow: 3.15.0
 - Runtime image: `telco-churn-m7-runtime:local`
+- Commit: `b8a2739` (`feat: add MLflow experiment registry`)
 - ADR: `docs/decisions/0003-local-mlflow-registry-and-m3-serving-bundles.md`
 - Verification commands: recorded in `docs/testing.md` and the M7 report.

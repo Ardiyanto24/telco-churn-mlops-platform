@@ -4,6 +4,8 @@
 
 Verified on 2026-08-02.
 
+Commit: `b8a2739`
+
 ## Delivered
 
 - Local MLflow OSS tracking/registry integration on SQLite.
