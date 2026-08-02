@@ -38,6 +38,10 @@
   an image was produced. The existing `m9-local` image cannot be paired with
   the current source SHA without falsifying release identity, so it was not
   used for the M11 staging drill.
+- GitHub initially rejected `release.yml` before scheduling jobs because
+  expressions were embedded in YAML flow mappings. Converted those mappings
+  to block-style `env` entries and quoted expression-bearing scalars; the
+  subsequent push created a normal `CI` run instead of a workflow-file run.
 
 ## Decisions dan deviations
 
