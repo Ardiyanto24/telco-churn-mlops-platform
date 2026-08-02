@@ -32,4 +32,5 @@ class CiWorkflowTests(unittest.TestCase):
         self.assertIn("environment: staging", workflow)
         self.assertIn("environment: production", workflow)
         self.assertIn("ReleaseManifest.from_dict", workflow)
+        self.assertIn("deployments/history/*.json", workflow)
         self.assertIn("retention-days: 30", workflow)
