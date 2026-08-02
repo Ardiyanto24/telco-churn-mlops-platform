@@ -37,6 +37,7 @@ tetap dicatat walau sudah ditangani.
 
 ## Daftar log
 
+- [M10 continuous integration](m10-continuous-integration.md)
 - [M9 container dan local runtime](m9-container-and-local-runtime.md)
 - [M8 evaluation dan promotion gates](m8-evaluation-and-promotion-gates.md)
 - [M7 experiment tracking dan model registry](m7-experiment-tracking-and-registry.md)
