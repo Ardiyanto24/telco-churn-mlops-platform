@@ -21,6 +21,12 @@
 
 - M9 image initially depended on a developer-local M8 image. It was changed to
   install the checked-in runtime lock, allowing clean GitHub runner builds.
+- First remote CI run failed because Trivy action tag `0.28.0` did not exist and
+  the standalone synthetic-bundle generator lacked the repository import path.
+  The action now uses official `v0.36.0`; the script initializes its root and
+  `src` paths. The next complete remote run passed all required jobs.
+- Trivy then reported its severity value as two inputs; quoting `CRITICAL,HIGH`
+  preserves the intended critical-and-high filter for the subsequent run.
 
 ## Decisions and deviations
 

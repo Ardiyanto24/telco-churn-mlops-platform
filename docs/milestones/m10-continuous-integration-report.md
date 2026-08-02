@@ -12,6 +12,8 @@ Tanggal: 2026-08-02
 
 - `python -m unittest tests.test_ci_workflow -v` in the locked runtime: 2 pass.
 - `scripts/create_ci_bundle.py`: synthetic verified bundle generated successfully.
+- GitHub Actions run `30751330111`: `fast`, `model`, `container-smoke`,
+  `security`, and `required-checks` all passed.
 
 ## Exit criteria
 
@@ -26,3 +28,4 @@ Tanggal: 2026-08-02
 ## Known limitations
 
 - Branch protection and remote workflow execution need GitHub repository access.
+- Branch protection policy remains to be applied by a repository administrator.
