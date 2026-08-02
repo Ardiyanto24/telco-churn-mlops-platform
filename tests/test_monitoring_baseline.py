@@ -50,4 +50,3 @@ class MonitoringBaselineTests(unittest.TestCase):
             validate_baseline(baseline, model_version="other", schema_version="v1", feature_order=_Manifest.feature_order)
         with self.assertRaises(BaselineError):
             validate_baseline(baseline, model_version="m13-test", schema_version="v1", feature_order=("tenure",))
-
