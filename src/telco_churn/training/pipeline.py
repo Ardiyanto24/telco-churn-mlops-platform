@@ -176,6 +176,14 @@ def _split(features, target, config: TrainingConfig):
     return train_x, validation_x, test_x, train_y, validation_y, test_y
 
 
+def reconstruct_training_split(frame, config: TrainingConfig):
+    """Return the exact M6 fit population without training or mutating source data."""
+    features = frame.drop(columns=TARGET_COLUMN)
+    target = frame[TARGET_COLUMN].eq("Yes").astype(int)
+    train_x, _, _, _, _, _ = _split(features, target, config)
+    return frame.loc[train_x.index].copy()
+
+
 def _select_f1_threshold(target, probabilities):
     precision, recall, thresholds = precision_recall_curve(target, probabilities)
     f1_scores = 2 * precision[:-1] * recall[:-1] / np.maximum(precision[:-1] + recall[:-1], 1e-12)

@@ -26,6 +26,7 @@ def build_baseline(
     bundle: Any,
     model_manifest_sha256: str | None = None,
     reference_population: dict[str, Any] | None = None,
+    status: str = "provisional",
 ) -> dict[str, Any]:
     """Build canonical baseline content without storing source rows or identifiers."""
     manifest = bundle.manifest
@@ -41,9 +42,11 @@ def build_baseline(
     if len(probabilities) != len(records) or any(not 0 <= value <= 1 for value in probabilities):
         raise BaselineError("bundle predictions do not match the reference population")
     population = reference_population or {"split": "train", "filters": [], "origin": "M5 validated training split"}
+    if status not in {"provisional", "approved"}:
+        raise BaselineError("baseline status is not supported")
     content: dict[str, Any] = {
         "baseline_version": BASELINE_VERSION,
-        "status": "provisional",
+        "status": status,
         "lineage": {
             "dataset_manifest_sha256": dataset_manifest["sha256"],
             "model_version": manifest.model_version,
