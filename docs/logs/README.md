@@ -37,6 +37,7 @@ tetap dicatat walau sudah ditangani.
 
 ## Daftar log
 
+- [M8 evaluation dan promotion gates](m8-evaluation-and-promotion-gates.md)
 - [M7 experiment tracking dan model registry](m7-experiment-tracking-and-registry.md)
 
 - [M0 — Baseline legacy](m0-legacy-baseline.md)

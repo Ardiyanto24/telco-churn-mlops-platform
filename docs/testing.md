@@ -28,3 +28,11 @@ docker run --rm --mount "type=bind,source=$((Get-Location).Path),target=/workspa
   --workdir /workspace -e PYTHONPATH=/workspace/src `
   --entrypoint python telco-churn-m7-runtime:local scripts/run_tests.py model
 ```
+
+M8 evaluation and promotion-gate checks use the M8 image:
+
+```powershell
+docker run --rm --mount "type=bind,source=$((Get-Location).Path),target=/workspace,readonly" `
+  --workdir /workspace -e PYTHONPATH=/workspace/src `
+  --entrypoint python telco-churn-m8-runtime:local scripts/run_tests.py model
+```
