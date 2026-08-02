@@ -10,139 +10,193 @@ Accepted
 
 ## Context
 
-M0–M9 supply deterministic tests, versioned model gates, and a local serving
+M0–M9 provide deterministic tests, versioned model gates, and a local serving
 runtime. M10 must make those controls automatic for every proposed change while
-remaining affordable, reproducible, and unable to access customer data or
+remaining reproducible, affordable, and unable to access customer data or
 deployment credentials.
 
 ## Decision
 
-M10 adopts these seventeen decisions.
+M10 adopts the following seventeen decisions.
 
-### 1. Platform
+### 1. CI platform: GitHub Actions
 
-Use GitHub Actions. It is native to the repository hosting workflow and keeps
-pull-request checks, artifacts, and branch-protection status in one system.
+Use GitHub Actions because checks, pull requests, artifacts, and branch
+protection are co-located with the repository and need no separate CI service.
 
-### 2. Triggers
+GitLab CI, Jenkins, and hosted third-party CI are not selected: they add either
+a hosting migration, operational maintenance, or credentials/billing before the
+project needs those capabilities.
 
-Run on pull requests to `main`, pushes to `main`, and `workflow_dispatch`.
-No scheduled heavy run is added until cost/need is demonstrated.
+### 2. Triggers: PR, main push, and manual dispatch
 
-### 3. Required checks
+Run CI for pull requests targeting `main`, pushes to `main`, and
+`workflow_dispatch`. This validates proposed changes, records the post-merge
+state, and permits controlled reruns.
 
-Require `fast`, `model`, `container-smoke`, and `security` before merge. A
-failed check blocks merge; manual local evidence cannot waive it.
+Scheduled runs are not selected in v1 because there is no external dependency
+or production service that needs continuous polling; they would consume
+free-tier minutes without a changed input.
 
-### 4. Job topology
+### 3. Required checks: four controls plus an aggregate
 
-Use four independently diagnosable parallel jobs: fast checks, locked model
-suite, container/Compose smoke, and security. A final `required-checks` job
-reports the combined result for branch protection.
+Require `fast`, `model`, `container-smoke`, and `security`; an aggregate
+`required-checks` status is the branch-protection target. The split reflects
+independent failure domains and the M4/M8/M9 exit criteria.
 
-### 5. Runtime strategy
+A single generic test check is not selected because it hides whether a failure
+is code, model contract, runtime, or security related. Optional checks alone
+are not selected because M10's purpose is to remove dependence on manual merge
+judgment.
 
-Fast checks run on Ubuntu Python 3.10. Model and API tests build/use the locked
-Docker runtime so artifact compatibility is tested on the same Python lineage.
+### 4. Job topology: parallel, focused jobs
 
-### 6. Docker build strategy
+Use four parallel jobs so a fast failure is visible quickly and expensive model
+or container work does not obscure its cause. Each job has its own command,
+timeout, summary, and artifact set.
 
-Use BuildKit GitHub Actions cache keyed by Dockerfile and lockfile inputs. Tag
-CI images with the commit SHA; build and inspect only—M10 never pushes images.
+One serial all-in-one job is not selected: it delays feedback, spends minutes
+after an early failure, and provides poor ownership. A larger micro-job graph is
+also not selected because this project has four material control boundaries,
+not enough independent work to justify orchestration overhead.
 
-### 7. Smoke-test model artifact
+### 5. Runtime: host Python for fast, locked Docker for compatibility
 
-Create a small synthetic verified M3 bundle during the workflow or test setup.
-Never download remote data or commit a serving model solely for CI smoke tests.
+Fast checks use Ubuntu Python 3.10; model/API checks use locked Docker runtimes
+to preserve the artifact-compatible Python and dependency lineage.
 
-### 8. Test matrix
+Host-only CI is not selected because it can silently differ from the pinned
+scikit-learn runtime. Docker-only CI is not selected because cheap static tests
+would pay container build/startup cost with no extra confidence.
 
-Use Ubuntu and Python 3.10 only. A cross-version/OS matrix would not validate
-the locked artifact contract and would consume free-tier minutes without a
-supported deployment target.
+### 6. Docker build: BuildKit cache, SHA tag, no push
 
-### 9. Negative controls
+Build with BuildKit cache keyed by Dockerfile and lockfile inputs and tag every
+CI image with the commit SHA. Inspect it and use it for smoke tests, but do not
+push it.
 
-Run explicit tests for an invalid artifact/readiness failure, a failed M8 gate,
-and an intentional failing unittest command. The workflow passes only when each
-negative control fails as expected.
+`latest` and mutable PR tags are not selected because they cannot reproduce an
+image. Pushing every PR image is not selected because M10 validates changes; it
+does not yet authorize release, registry credentials, or retention cost.
 
-### 10. Security controls
+### 7. Smoke artifact: generated synthetic verified bundle
 
-Run secret detection and dependency/container vulnerability scans. Secrets are
-always blocking. Reachable critical/high findings block; SBOM generation starts
-informational and is uploaded as an artifact.
+Generate a small synthetic M3-compatible bundle during the workflow/test setup.
+It exercises the verified-loader and serving contract without remote services.
 
-### 11. Cache policy
+Downloading a real dataset/model is not selected because it introduces data,
+privacy, credentials, cost, and availability dependencies. Committing a
+dedicated serving bundle is not selected because it risks stale binary artifacts
+and unnecessary repository growth.
 
-Cache pip downloads and BuildKit layers using hashes of the lockfiles and
-Dockerfiles. Do not cache mutable virtual environments, artifacts, datasets, or
-model bundles.
+### 8. Test matrix: Ubuntu and Python 3.10 only
 
-### 12. Timeout, retry, and concurrency
+Use one supported Linux runner and Python 3.10, matching the locked artifact
+runtime and M9 container lineage.
 
-Use `concurrency` keyed by workflow plus PR/ref with `cancel-in-progress: true`.
-Set 10 minutes for fast/security and 20 minutes for model/container jobs. Do
-not automatically retry test failures; rerun only platform failures manually.
+A multi-OS or multi-Python matrix is not selected before those platforms are
+deployment targets; it would multiply CI time yet cannot certify serialized
+artifact compatibility outside the supported runtime.
 
-### 13. Artifact retention
+### 9. Negative controls: prove critical controls fail closed
 
-Keep PR logs, JUnit/coverage, scan reports, and image metadata for 14 days;
-keep successful `main` evidence for 30 days. Do not upload model/data payloads.
+Explicitly verify an invalid artifact/readiness failure, an M8 gate failure,
+and an intentional failing unittest command. The CI job passes only when each
+negative command fails for the expected reason.
 
-### 14. Branch protection
+Only positive tests are not selected because they cannot show that guards block
+bad input. Intentionally leaving a workflow red is not selected because a
+negative control is evidence only when its expected failure is handled and the
+workflow itself reports success.
 
-Require the combined check and one approving review on `main`; dismiss stale
-approvals after new commits. Admin bypass is exceptional and must be auditable.
-The workflow documents this policy if repository permissions cannot set it.
+### 10. Security gates: secrets mandatory; triaged vulnerabilities
 
-### 15. Permissions and external access
+Secret detection always blocks. Dependency and container scans block reachable
+critical/high findings; SBOM generation is informational and uploaded.
 
-Set workflow `permissions: contents: read`. Use no cloud credentials, package
-publish permissions, registry push token, remote data remote, or deployment
-secret in M10.
+No security scan is not selected because CI would miss a basic release gate.
+Blocking every informational/low finding is not selected because untriaged
+noise produces alert fatigue and weakens attention to material issues.
 
-### 16. CI observability
+### 11. Cache: immutable-input keyed downloads/layers only
 
-Every job writes a GitHub Actions summary with command, duration, image SHA,
-and artifact links. Reports distinguish test/code failure from build or runner
+Cache pip downloads and BuildKit layers using lockfile/Dockerfile hashes. Never
+cache virtual environments, datasets, artifacts, or model bundles.
+
+Unkeyed broad caches are not selected because they can hide dependency drift.
+No cache is not selected because repeated locked dependency and Docker work
+would needlessly consume CI minutes without increasing reproducibility.
+
+### 12. Timeouts, retries, and concurrency
+
+Use PR/ref concurrency with `cancel-in-progress: true`; fast/security jobs get
+10 minutes and model/container jobs get 20 minutes. Do not automatically retry
+test failures; maintainers may rerun identified platform failures.
+
+Unlimited jobs are not selected because hung Docker/build commands consume
+quota. Automatic retries are not selected because they can mask flaky tests;
+blindly retaining superseded PR runs is not selected because their result is no
+longer relevant.
+
+### 13. Artifact retention: bounded diagnostic evidence
+
+Retain PR logs, JUnit/coverage, scan reports, and image metadata for 14 days;
+retain successful `main` evidence for 30 days. Do not upload model or data
+payloads.
+
+Indefinite retention is not selected because it consumes limited storage and
+retains stale diagnostics. No artifact retention is not selected because it
+makes failures impossible to investigate after a runner is gone.
+
+### 14. Branch protection: review plus required CI
+
+Protect `main` with the aggregate required check, one approving review, and
+stale-approval dismissal after new commits. Admin bypass is exceptional and
+must be auditable.
+
+CI-only merge is not selected because model changes still require accountable
+human review. Unprotected main is not selected because it permits bypassing all
+M10 controls. If repository permissions are unavailable, M10 documents this
+policy rather than claiming the setting was applied.
+
+### 15. Permissions and external access: least privilege
+
+Set workflow permissions to `contents: read`; M10 uses no cloud credentials,
+package publishing rights, registry push token, remote data remote, or
+deployment secret.
+
+Write-all default tokens are not selected because a test workflow should not
+mutate repository or release state. Remote data/registry access is not selected
+because it would make CI non-deterministic and expand its credential boundary.
+
+### 16. CI observability: structured job summaries
+
+Each job writes a GitHub Actions summary with command, duration, image SHA, and
+artifact links; failures are classified as test/code, build, scan, or runner
 infrastructure failure.
 
-### 17. Definition of a passing CI run
+Raw console output alone is not selected because it is difficult to scan and
+does not preserve the key release evidence. An external observability platform
+is not selected because M10 does not need production-scale telemetry.
 
-A passing run has all required jobs green, a SHA-tagged image built, Compose
-ready against a synthetic verified bundle, negative controls observed, no
-blocking security finding, and retained diagnostic artifacts.
+### 17. Passing CI definition: complete evidence, not just green tests
 
-## Alternatives Considered
+A passing run requires all required jobs green, a SHA-tagged image built,
+Compose ready with a synthetic verified bundle, negative controls observed, no
+blocking security finding, and diagnostic artifacts retained.
 
-### One serial all-in-one job
-
-Rejected: it delays feedback, wastes minutes after an early failure, and makes
-failure ownership unclear.
-
-### Push every PR image or use production credentials
-
-Rejected: M10 validates code, not releases. Least privilege prevents CI from
-becoming a deployment path.
-
-### Download the real dataset/model in CI
-
-Rejected: it creates secret, cost, availability, and privacy dependencies. A
-synthetic bundle tests the serving contract without those risks.
-
-### Treat all security findings as blocking immediately
-
-Rejected: untriaged informational/low findings create noise. Secrets and
-critical/high reachable findings remain hard gates; SBOM starts informational.
+“Unit tests passed” alone is not selected because it omits model gates,
+container readiness, security, and reproducibility. A successful image build
+alone is not selected because it does not prove the image can serve a verified
+model.
 
 ## Consequences
 
-- M10 will provide repeatable evidence for merge decisions without creating a
-  release or deployment mechanism.
-- CI cost is controlled by parallel targeted jobs, cancellation, limited
-  retention, and no remote data transfers.
-- M11 can add release credentials and image publishing only through a new,
+- M10 provides repeatable merge evidence without creating a release or
+  deployment mechanism.
+- CI costs are bounded by parallel targeted jobs, cancellation, caching, and
+  short retention; no customer data or deployment credential enters CI.
+- M11 may add release credentials or image publishing only through a new,
   explicitly reviewed policy.
 
 ## References
