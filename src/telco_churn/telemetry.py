@@ -125,6 +125,9 @@ class TelemetryEmitter:
             "environment": self.environment,
             "failed_event_name": event["event_name"],
         }
+        for correlation_field in ("request_id", "trace_id"):
+            if event.get(correlation_field) is not None:
+                fallback[correlation_field] = event[correlation_field]
         try:
             self.failure_sink(json.dumps(fallback, sort_keys=True, separators=(",", ":")))
         except Exception:
