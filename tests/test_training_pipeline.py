@@ -123,6 +123,15 @@ class TrainingPipelineTests(unittest.TestCase):
             self.assertNotEqual(first_record["config"]["seed"], second_record["config"]["seed"])
             self.assertEqual(first_record["model_family"], "logistic_regression")
 
+    def test_reads_m6_legacy_flat_model_parameters_for_evaluation_replay(self) -> None:
+        config = TrainingConfig.from_dict({
+            "run_name": "m6-historical", "seed": 42,
+            "split": {"train_fraction": 0.70, "validation_fraction": 0.15, "test_fraction": 0.15},
+            "model": {"type": "logistic_regression", "C": 1.0, "max_iter": 400},
+        })
+
+        self.assertEqual(config.model.params, {"C": 1.0, "max_iter": 400})
+
     def test_contract_failure_halts_before_creating_output(self) -> None:
         from tests.support import temporary_workspace
 
