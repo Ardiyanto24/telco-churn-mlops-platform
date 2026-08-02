@@ -19,6 +19,15 @@ Two runs with identical verified data, config, runtime lock, and seed must have 
 
 The generated local candidate (`artifacts/candidates/m6-logistic-v1/`) used the M5 dataset manifest SHA-256 `0eea83d4…4d52da5c` (594194 rows). Its test-set metrics were AP `0.7461341275`, ROC-AUC `0.9138487697`, F1 `0.6980450923`, and validation-selected threshold `0.3909368362`. This is evaluation evidence only; it is not a promotion decision.
 
+## Test evidence
+
+| Check | Result |
+|---|---|
+| M6 model/contract suite | 18 passed in `telco-churn-m5-runtime:local`. |
+| Full M6 CLI | Completed in 155.5 seconds from commit `e4da1aa`. |
+| M3 loader on final candidate | Loaded successfully; 29 features. |
+| Broad regression suite | 41 passed; one baseline integration cannot invoke Docker from inside the verification container, unrelated to M6. |
+
 ## Exit criteria
 
 - [x] Training runs non-interactively through one command.

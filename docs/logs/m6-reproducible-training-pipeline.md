@@ -21,8 +21,9 @@
 |---|---|
 | RED training-module test | `ModuleNotFoundError` seperti diharapkan. |
 | M6 model/contract suite | 18 passed di `telco-churn-m5-runtime:local`. |
-| Full CLI training | selesai; candidate bundle dibuat. |
-| M3 bundle verification | dijalankan kembali setelah final commit/run. |
+| Full suite | 41 passed; satu baseline integration tidak dapat menjalankan Docker dari dalam container. |
+| Final full CLI training | selesai dari commit `e4da1aa`; 155.5 detik. |
+| M3 bundle verification | load sukses; 29 feature output. |
 
 ## Handoff
 
