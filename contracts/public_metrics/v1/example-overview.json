@@ -1,0 +1,12 @@
+{
+  "schema_version": "public_metrics/v1",
+  "snapshot_id": "public-2e7a5835fa71c4559bb2",
+  "generated_at": "2026-08-03T12:00:00Z",
+  "freshness": {"state": "fresh", "target_seconds": 86400},
+  "data": {
+    "evidence_state": "stable",
+    "data_origins": ["replayed"],
+    "latest_observed_window_end": "2026-08-03T12:00:00Z",
+    "candidate_mode": true
+  }
+}

@@ -1,0 +1,22 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://telco-churn.example/contracts/public_metrics/v1/schema.json",
+  "title": "Telco Churn Public Metrics Snapshot v1",
+  "type": "object",
+  "required": ["schema_version", "snapshot_id", "generated_at", "freshness", "overview", "models", "service", "monitoring", "performance", "alerts", "recommendations", "methodology"],
+  "properties": {
+    "schema_version": {"const": "public_metrics/v1"},
+    "snapshot_id": {"type": "string", "pattern": "^public-[a-f0-9]{20}$"},
+    "generated_at": {"type": "string", "format": "date-time"},
+    "freshness": {"type": "object", "required": ["state"], "properties": {"state": {"enum": ["fresh", "late", "stale", "not_available"]}}},
+    "overview": {"type": "object", "required": ["evidence_state", "data_origins", "candidate_mode"]},
+    "models": {"type": "object", "required": ["current", "history"]},
+    "service": {"type": "object", "required": ["history"]},
+    "monitoring": {"type": "object", "required": ["history"]},
+    "performance": {"type": "object", "required": ["history"]},
+    "alerts": {"type": "object", "required": ["history"]},
+    "recommendations": {"type": "object", "required": ["history"]},
+    "methodology": {"type": "object", "required": ["candidate_mode", "minimum_group_size", "data_origin_required"]}
+  },
+  "additionalProperties": false
+}
