@@ -49,6 +49,8 @@ class MetricsStoreTests(unittest.TestCase):
         self.assertEqual(self.store.upgrade(), [])
         tables = {row[0] for row in self.connection.execute("SELECT name FROM sqlite_master WHERE type='table'")}
         self.assertTrue({"schema_migrations", "model_versions", "deployments", "metric_results", "monitoring_results", "performance_results", "telemetry_rollups", "alert_revisions", "public_snapshots"}.issubset(tables))
+        self.store.downgrade_for_test()
+        self.assertIsNone(self.connection.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='metric_results'").fetchone())
 
     def test_retrying_the_same_aggregate_result_does_not_duplicate_rows(self) -> None:
         self.store.upgrade()

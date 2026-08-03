@@ -14,6 +14,9 @@ FASTAPI_AVAILABLE = find_spec("fastapi") is not None
 if FASTAPI_AVAILABLE:
     from fastapi.testclient import TestClient
     from telco_churn.internal_dashboard import create_internal_dashboard
+    from telco_churn.api.app import create_app
+    from telco_churn.api.service import PredictionService
+    from telco_churn.settings import load_settings
 
 
 UTC = timezone.utc
@@ -62,6 +65,14 @@ class InternalDashboardTests(unittest.TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertIn("not_available", response.text)
         self.assertNotIn("Current evidence: <strong>stable</strong>", response.text)
+
+    def test_dashboard_data_failure_does_not_affect_prediction_api_liveness(self) -> None:
+        self.store.downgrade_for_test()
+        dashboard = self.client.get("/internal/dashboard", headers={"X-Internal-Metrics-Token": "test-internal-token"})
+        prediction = TestClient(create_app(service=PredictionService.unavailable(), settings=load_settings({}))).get("/health/live")
+
+        self.assertEqual(dashboard.status_code, 503)
+        self.assertEqual(prediction.status_code, 200)
 
 
 if __name__ == "__main__":
