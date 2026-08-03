@@ -1,0 +1,8 @@
+{
+  "version": "m18-candidate/v1",
+  "mode": "candidate",
+  "dashboard_expected_interval_hours": 24,
+  "aggregate_retention_days": 395,
+  "row_level_join_retention_days": 30,
+  "allowed_data_origins": ["offline_test", "replayed", "synthetic", "production"]
+}
