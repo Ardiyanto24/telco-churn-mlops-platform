@@ -1,0 +1,8 @@
+{
+  "version": "m17-candidate/v1",
+  "candidate_mode": true,
+  "persistence_windows": 2,
+  "maximum_consecutive_gap_days": 2,
+  "minimum_performance_sample_size": 500,
+  "minimum_performance_coverage": 0.8
+}
