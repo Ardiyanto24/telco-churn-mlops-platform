@@ -45,10 +45,10 @@ class MetricsStoreTests(unittest.TestCase):
         self.connection.close()
 
     def test_migrates_an_empty_database_and_records_version(self) -> None:
-        self.assertEqual(self.store.upgrade(), ["0001"])
+        self.assertEqual(self.store.upgrade(), ["0001", "0002"])
         self.assertEqual(self.store.upgrade(), [])
         tables = {row[0] for row in self.connection.execute("SELECT name FROM sqlite_master WHERE type='table'")}
-        self.assertTrue({"schema_migrations", "model_versions", "deployments", "metric_results", "monitoring_results", "performance_results", "telemetry_rollups", "alert_revisions", "public_snapshots"}.issubset(tables))
+        self.assertTrue({"schema_migrations", "model_versions", "deployments", "metric_results", "monitoring_results", "performance_results", "telemetry_rollups", "alert_revisions", "public_snapshots", "public_snapshot_documents", "public_export_state"}.issubset(tables))
         self.store.downgrade_for_test()
         self.assertIsNone(self.connection.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='metric_results'").fetchone())
 

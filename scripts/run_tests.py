@@ -12,12 +12,12 @@ import unittest
 CATEGORIES = {
     "fast": ("test_settings.py", "test_dependency_lock.py"),
     "unit": ("test_settings.py", "test_dependency_lock.py"),
-    "api": ("test_prediction_api.py", "test_telemetry.py", "test_internal_dashboard.py"),
-    "model": ("test_preprocessing.py", "test_artifact_bundle.py", "test_data_contract.py", "test_training_pipeline.py", "test_experiment_registry.py", "test_evaluation_gates.py", "test_monitoring_baseline.py", "test_monitoring_engine.py", "test_monitoring_calibration.py", "test_performance_monitoring.py", "test_alerting.py", "test_metrics_store.py", "test_metrics_store_script.py"),
+    "api": ("test_prediction_api.py", "test_telemetry.py", "test_internal_dashboard.py", "test_public_metrics.py"),
+    "model": ("test_preprocessing.py", "test_artifact_bundle.py", "test_data_contract.py", "test_training_pipeline.py", "test_experiment_registry.py", "test_evaluation_gates.py", "test_monitoring_baseline.py", "test_monitoring_engine.py", "test_monitoring_calibration.py", "test_performance_monitoring.py", "test_alerting.py", "test_metrics_store.py", "test_metrics_store_script.py", "test_public_metrics_script.py"),
     "integration": ("test_baseline_runner.py", "test_prediction_api.py", "test_local_runtime.py", "test_release_control.py"),
     "all": (
         "test_settings.py", "test_dependency_lock.py", "test_data_contract.py", "test_import_graph.py",
-        "test_preprocessing.py", "test_artifact_bundle.py", "test_prediction_api.py", "test_telemetry.py", "test_internal_dashboard.py", "test_training_pipeline.py", "test_experiment_registry.py", "test_evaluation_gates.py", "test_monitoring_baseline.py", "test_monitoring_engine.py", "test_monitoring_calibration.py", "test_performance_monitoring.py", "test_alerting.py", "test_metrics_store.py", "test_metrics_store_script.py",
+        "test_preprocessing.py", "test_artifact_bundle.py", "test_prediction_api.py", "test_telemetry.py", "test_internal_dashboard.py", "test_public_metrics.py", "test_training_pipeline.py", "test_experiment_registry.py", "test_evaluation_gates.py", "test_monitoring_baseline.py", "test_monitoring_engine.py", "test_monitoring_calibration.py", "test_performance_monitoring.py", "test_alerting.py", "test_metrics_store.py", "test_metrics_store_script.py", "test_public_metrics_script.py",
         "test_baseline_runner.py", "test_local_runtime.py", "test_release_control.py",
     ),
 }
