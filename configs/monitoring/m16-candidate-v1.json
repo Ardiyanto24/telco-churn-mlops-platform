@@ -1,0 +1,10 @@
+{
+  "version": "m16-candidate/v1",
+  "maturity_horizon_days": 90,
+  "ingestion_grace_hours": 24,
+  "minimum_mature_labels": 500,
+  "minimum_label_coverage": 0.8,
+  "probability_bin_edges": [0.0, 0.2, 0.4, 0.6, 0.8, 1.0],
+  "maximum_rolling_cohorts": 3,
+  "allow_production_origin": false
+}
