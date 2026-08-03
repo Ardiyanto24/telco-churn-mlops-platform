@@ -37,6 +37,7 @@ tetap dicatat walau sudah ditangani.
 
 ## Daftar log
 
+- [M18 internal metrics store dan dashboard](m18-internal-metrics-store-and-dashboard.md)
 - [M17 alerting dan retraining recommendation](m17-alerting-and-retraining-recommendation.md)
 - [M16 delayed-label performance monitoring](m16-delayed-label-performance-monitoring.md)
 - [M13 reference baseline generation](m13-reference-baseline-generation.md)
