@@ -8,6 +8,7 @@ from datetime import datetime, timedelta, timezone
 from hashlib import sha256
 import json
 import sqlite3
+from threading import RLock
 from typing import Any, Literal
 
 
@@ -82,21 +83,29 @@ class MetricsStore:
         self._connection = connection
         self._connection.row_factory = sqlite3.Row
         self._connection.execute("PRAGMA foreign_keys = ON")
+        self._lock = RLock()
+
+    @classmethod
+    def open_sqlite(cls, path: str = ":memory:") -> "MetricsStore":
+        """Create the local/test adapter safe for FastAPI worker-thread reads."""
+        return cls(sqlite3.connect(path, check_same_thread=False))
 
     def upgrade(self) -> list[str]:
-        self._connection.execute("CREATE TABLE IF NOT EXISTS schema_migrations (version TEXT PRIMARY KEY, applied_at TEXT NOT NULL)")
-        applied = {row["version"] for row in self._connection.execute("SELECT version FROM schema_migrations")}
-        executed: list[str] = []
-        if "0001" not in applied:
-            self._connection.executescript(_MIGRATION_0001)
-            self._connection.execute("INSERT INTO schema_migrations(version, applied_at) VALUES (?, ?)", ("0001", _iso(datetime.now(timezone.utc))))
-            self._connection.commit()
-            executed.append("0001")
-        return executed
+        with self._lock:
+            self._connection.execute("CREATE TABLE IF NOT EXISTS schema_migrations (version TEXT PRIMARY KEY, applied_at TEXT NOT NULL)")
+            applied = {row["version"] for row in self._connection.execute("SELECT version FROM schema_migrations")}
+            executed: list[str] = []
+            if "0001" not in applied:
+                self._connection.executescript(_MIGRATION_0001)
+                self._connection.execute("INSERT INTO schema_migrations(version, applied_at) VALUES (?, ?)", ("0001", _iso(datetime.now(timezone.utc))))
+                self._connection.commit()
+                executed.append("0001")
+            return executed
 
     def downgrade_for_test(self) -> None:
         """Remove the M18 schema only in an isolated local/test database."""
-        self._connection.executescript("""
+        with self._lock:
+            self._connection.executescript("""
             DROP TABLE IF EXISTS public_snapshots;
             DROP TABLE IF EXISTS alert_revisions;
             DROP TABLE IF EXISTS performance_results;
@@ -106,52 +115,54 @@ class MetricsStore:
             DROP TABLE IF EXISTS deployments;
             DROP TABLE IF EXISTS model_versions;
             DROP TABLE IF EXISTS schema_migrations;
-        """)
-        self._connection.commit()
+            """)
+            self._connection.commit()
 
     def ingest(self, record: MetricRecord) -> IngestResult:
         self._require_schema()
         key = _idempotency_key(record)
-        existing = self._connection.execute("SELECT result_id FROM metric_results WHERE idempotency_key = ?", (key,)).fetchone()
-        if existing is not None:
-            return IngestResult(result_id=existing["result_id"], idempotency_key=key, reused=True)
-        try:
-            with self._connection:
-                self._connection.execute(
-                    "INSERT OR IGNORE INTO model_versions(model_version, created_at) VALUES (?, ?)",
-                    (record.model_version, _iso(record.computed_at)),
-                )
-                if record.deployment_id:
+        with self._lock:
+            existing = self._connection.execute("SELECT result_id FROM metric_results WHERE idempotency_key = ?", (key,)).fetchone()
+            if existing is not None:
+                return IngestResult(result_id=existing["result_id"], idempotency_key=key, reused=True)
+            try:
+                with self._connection:
                     self._connection.execute(
-                        "INSERT OR IGNORE INTO deployments(deployment_id, model_version, created_at) VALUES (?, ?, ?)",
-                        (record.deployment_id, record.model_version, _iso(record.computed_at)),
+                        "INSERT OR IGNORE INTO model_versions(model_version, created_at) VALUES (?, ?)",
+                        (record.model_version, _iso(record.computed_at)),
                     )
-                self._connection.execute(
-                    """INSERT INTO metric_results(
-                        result_id, result_type, status, data_origin, window_start, window_end,
-                        computed_at, sample_size, label_coverage, method_version, config_version,
-                        model_version, baseline_id, deployment_id, summary_json, distribution_json,
-                        idempotency_key, created_at
-                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
-                    (
-                        record.result_id, record.result_type, record.status, record.data_origin,
-                        _iso(record.window_start), _iso(record.window_end), _iso(record.computed_at),
-                        record.sample_size, record.label_coverage, record.method_version, record.config_version,
-                        record.model_version, record.baseline_id, record.deployment_id,
-                        _canonical(record.summary), _canonical(record.distribution), key,
-                        _iso(datetime.now(timezone.utc)),
-                    ),
-                )
-                self._connection.execute(f"INSERT INTO {_RESULT_TABLES[record.result_type]}(result_id) VALUES (?)", (record.result_id,))
-        except sqlite3.IntegrityError as exc:
-            raise MetricsStoreError("metric record conflicts with existing immutable result") from exc
+                    if record.deployment_id:
+                        self._connection.execute(
+                            "INSERT OR IGNORE INTO deployments(deployment_id, model_version, created_at) VALUES (?, ?, ?)",
+                            (record.deployment_id, record.model_version, _iso(record.computed_at)),
+                        )
+                    self._connection.execute(
+                        """INSERT INTO metric_results(
+                            result_id, result_type, status, data_origin, window_start, window_end,
+                            computed_at, sample_size, label_coverage, method_version, config_version,
+                            model_version, baseline_id, deployment_id, summary_json, distribution_json,
+                            idempotency_key, created_at
+                        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
+                        (
+                            record.result_id, record.result_type, record.status, record.data_origin,
+                            _iso(record.window_start), _iso(record.window_end), _iso(record.computed_at),
+                            record.sample_size, record.label_coverage, record.method_version, record.config_version,
+                            record.model_version, record.baseline_id, record.deployment_id,
+                            _canonical(record.summary), _canonical(record.distribution), key,
+                            _iso(datetime.now(timezone.utc)),
+                        ),
+                    )
+                    self._connection.execute(f"INSERT INTO {_RESULT_TABLES[record.result_type]}(result_id) VALUES (?)", (record.result_id,))
+            except sqlite3.IntegrityError as exc:
+                raise MetricsStoreError("metric record conflicts with existing immutable result") from exc
         return IngestResult(result_id=record.result_id, idempotency_key=key, reused=False)
 
     def count_results(self, *, result_type: ResultType | None = None) -> int:
         self._require_schema()
-        if result_type is None:
-            return int(self._connection.execute("SELECT COUNT(*) FROM metric_results").fetchone()[0])
-        return int(self._connection.execute("SELECT COUNT(*) FROM metric_results WHERE result_type = ?", (result_type,)).fetchone()[0])
+        with self._lock:
+            if result_type is None:
+                return int(self._connection.execute("SELECT COUNT(*) FROM metric_results").fetchone()[0])
+            return int(self._connection.execute("SELECT COUNT(*) FROM metric_results WHERE result_type = ?", (result_type,)).fetchone()[0])
 
     def dashboard_snapshot(self, *, now: datetime, expected_interval: timedelta) -> dict[str, Any]:
         """Return safe, read-only aggregate data for the internal dashboard."""
@@ -159,9 +170,10 @@ class MetricsStore:
         if expected_interval <= timedelta(0):
             raise MetricsStoreError("expected_interval must be positive")
         current = _utc(now, "now")
-        rows = self._connection.execute(
-            "SELECT * FROM metric_results ORDER BY window_end DESC, result_id ASC LIMIT 50"
-        ).fetchall()
+        with self._lock:
+            rows = self._connection.execute(
+                "SELECT * FROM metric_results ORDER BY window_end DESC, result_id ASC LIMIT 50"
+            ).fetchall()
         results = [_dashboard_row(row) for row in rows]
         if not results:
             return {"state": "not_available", "reason": "no_metrics_ingested", "freshness": {"state": "not_available"}, "results": []}
@@ -179,15 +191,17 @@ class MetricsStore:
         if retention <= timedelta(0):
             raise MetricsStoreError("retention must be positive")
         cutoff = _utc(now, "now") - retention
-        with self._connection:
-            cursor = self._connection.execute(
-                "DELETE FROM metric_results WHERE window_end < ?", (_iso(cutoff),)
-            )
+        with self._lock:
+            with self._connection:
+                cursor = self._connection.execute(
+                    "DELETE FROM metric_results WHERE window_end < ?", (_iso(cutoff),)
+                )
         return cursor.rowcount
 
     def _require_schema(self) -> None:
-        if self._connection.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='metric_results'").fetchone() is None:
-            raise MetricsStoreError("M18 schema has not been migrated")
+        with self._lock:
+            if self._connection.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='metric_results'").fetchone() is None:
+                raise MetricsStoreError("M18 schema has not been migrated")
 
 
 def _dashboard_row(row: sqlite3.Row) -> dict[str, Any]:
