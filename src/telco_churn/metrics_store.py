@@ -100,12 +100,19 @@ class MetricsStore:
                 self._connection.execute("INSERT INTO schema_migrations(version, applied_at) VALUES (?, ?)", ("0001", _iso(datetime.now(timezone.utc))))
                 self._connection.commit()
                 executed.append("0001")
+            if "0002" not in applied:
+                self._connection.executescript(_MIGRATION_0002)
+                self._connection.execute("INSERT INTO schema_migrations(version, applied_at) VALUES (?, ?)", ("0002", _iso(datetime.now(timezone.utc))))
+                self._connection.commit()
+                executed.append("0002")
             return executed
 
     def downgrade_for_test(self) -> None:
         """Remove the M18 schema only in an isolated local/test database."""
         with self._lock:
             self._connection.executescript("""
+            DROP TABLE IF EXISTS public_export_state;
+            DROP TABLE IF EXISTS public_snapshot_documents;
             DROP TABLE IF EXISTS public_snapshots;
             DROP TABLE IF EXISTS alert_revisions;
             DROP TABLE IF EXISTS performance_results;
@@ -197,6 +204,76 @@ class MetricsStore:
                     "DELETE FROM metric_results WHERE window_end < ?", (_iso(cutoff),)
                 )
         return cursor.rowcount
+
+    def public_source_records(self) -> list[dict[str, Any]]:
+        """Return aggregate source rows for the M19 exporter, never raw events."""
+        self._require_schema()
+        with self._lock:
+            rows = self._connection.execute("SELECT * FROM metric_results ORDER BY window_end DESC, result_id ASC").fetchall()
+        return [_dashboard_row(row) for row in rows if row["result_type"] != "public_snapshot"]
+
+    def publish_public_snapshot(self, snapshot: Mapping[str, Any]) -> bool:
+        """Atomically publish a validated M19 snapshot; retrying identical content reuses it."""
+        self._require_schema()
+        snapshot_id = snapshot.get("snapshot_id")
+        schema_version = snapshot.get("schema_version")
+        if not isinstance(snapshot_id, str) or not snapshot_id or schema_version != "public_metrics/v1":
+            raise MetricsStoreError("public snapshot identity or schema is invalid")
+        content_hash = sha256(_canonical(snapshot).encode("utf-8")).hexdigest()
+        published_at = snapshot.get("generated_at")
+        if not isinstance(published_at, str):
+            raise MetricsStoreError("public snapshot generated_at is invalid")
+        with self._lock:
+            existing = self._connection.execute("SELECT content_hash FROM public_snapshot_documents WHERE snapshot_id = ?", (snapshot_id,)).fetchone()
+            if existing is not None:
+                if existing["content_hash"] != content_hash:
+                    raise MetricsStoreError("public snapshot conflicts with immutable content")
+                return True
+            with self._connection:
+                self._connection.execute(
+                    "INSERT INTO public_snapshot_documents(snapshot_id, content_hash, schema_version, payload_json, published_at) VALUES (?, ?, ?, ?, ?)",
+                    (snapshot_id, content_hash, schema_version, _canonical(snapshot), published_at),
+                )
+                self._connection.execute(
+                    "INSERT INTO public_export_state(singleton_id, snapshot_id, last_failure_at, failure_reason) VALUES (1, ?, NULL, NULL) "
+                    "ON CONFLICT(singleton_id) DO UPDATE SET snapshot_id=excluded.snapshot_id, last_failure_at=NULL, failure_reason=NULL",
+                    (snapshot_id,),
+                )
+        return False
+
+    def current_public_snapshot(self) -> dict[str, Any] | None:
+        """Read the current M19 snapshot and safely overlay any exporter failure state."""
+        self._require_schema()
+        with self._lock:
+            row = self._connection.execute(
+                "SELECT document.payload_json, state.last_failure_at, state.failure_reason FROM public_export_state AS state "
+                "JOIN public_snapshot_documents AS document ON document.snapshot_id = state.snapshot_id WHERE state.singleton_id = 1"
+            ).fetchone()
+        if row is None:
+            return None
+        snapshot = json.loads(row["payload_json"])
+        if row["last_failure_at"] is not None:
+            snapshot["freshness"] = {"state": "stale", "reason": row["failure_reason"], "last_failure_at": row["last_failure_at"]}
+        return snapshot
+
+    def retain_public_snapshot_after_failure(self, *, now: datetime, reason: str) -> dict[str, Any]:
+        """Preserve the last valid public snapshot and record only a safe failure class."""
+        self._require_schema()
+        if reason not in {"export_failed", "sanitisation_failed", "schema_invalid"}:
+            raise MetricsStoreError("public export failure reason is unsupported")
+        with self._lock:
+            has_snapshot = self._connection.execute("SELECT 1 FROM public_export_state WHERE singleton_id = 1").fetchone()
+            if has_snapshot is None:
+                raise MetricsStoreError("no prior public snapshot is available")
+            with self._connection:
+                self._connection.execute(
+                    "UPDATE public_export_state SET last_failure_at = ?, failure_reason = ? WHERE singleton_id = 1",
+                    (_iso(now), reason),
+                )
+        snapshot = self.current_public_snapshot()
+        if snapshot is None:
+            raise MetricsStoreError("no prior public snapshot is available")
+        return snapshot
 
     def _require_schema(self) -> None:
         with self._lock:
@@ -296,4 +373,21 @@ CREATE TABLE public_snapshots (result_id TEXT PRIMARY KEY REFERENCES metric_resu
 CREATE INDEX metric_results_window_end_idx ON metric_results(window_end DESC);
 CREATE INDEX metric_results_lineage_idx ON metric_results(model_version, deployment_id, result_type);
 CREATE INDEX metric_results_status_idx ON metric_results(result_type, status);
+"""
+
+
+_MIGRATION_0002 = """
+CREATE TABLE public_snapshot_documents (
+    snapshot_id TEXT PRIMARY KEY,
+    content_hash TEXT NOT NULL UNIQUE,
+    schema_version TEXT NOT NULL CHECK(schema_version = 'public_metrics/v1'),
+    payload_json TEXT NOT NULL,
+    published_at TEXT NOT NULL
+);
+CREATE TABLE public_export_state (
+    singleton_id INTEGER PRIMARY KEY CHECK(singleton_id = 1),
+    snapshot_id TEXT NOT NULL REFERENCES public_snapshot_documents(snapshot_id),
+    last_failure_at TEXT,
+    failure_reason TEXT
+);
 """
