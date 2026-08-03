@@ -13,11 +13,11 @@ CATEGORIES = {
     "fast": ("test_settings.py", "test_dependency_lock.py"),
     "unit": ("test_settings.py", "test_dependency_lock.py"),
     "api": ("test_prediction_api.py", "test_telemetry.py"),
-    "model": ("test_preprocessing.py", "test_artifact_bundle.py", "test_data_contract.py", "test_training_pipeline.py", "test_experiment_registry.py", "test_evaluation_gates.py", "test_monitoring_baseline.py", "test_monitoring_engine.py", "test_monitoring_calibration.py"),
+    "model": ("test_preprocessing.py", "test_artifact_bundle.py", "test_data_contract.py", "test_training_pipeline.py", "test_experiment_registry.py", "test_evaluation_gates.py", "test_monitoring_baseline.py", "test_monitoring_engine.py", "test_monitoring_calibration.py", "test_performance_monitoring.py"),
     "integration": ("test_baseline_runner.py", "test_prediction_api.py", "test_local_runtime.py", "test_release_control.py"),
     "all": (
         "test_settings.py", "test_dependency_lock.py", "test_data_contract.py", "test_import_graph.py",
-        "test_preprocessing.py", "test_artifact_bundle.py", "test_prediction_api.py", "test_telemetry.py", "test_training_pipeline.py", "test_experiment_registry.py", "test_evaluation_gates.py", "test_monitoring_baseline.py", "test_monitoring_engine.py", "test_monitoring_calibration.py",
+        "test_preprocessing.py", "test_artifact_bundle.py", "test_prediction_api.py", "test_telemetry.py", "test_training_pipeline.py", "test_experiment_registry.py", "test_evaluation_gates.py", "test_monitoring_baseline.py", "test_monitoring_engine.py", "test_monitoring_calibration.py", "test_performance_monitoring.py",
         "test_baseline_runner.py", "test_local_runtime.py", "test_release_control.py",
     ),
 }
