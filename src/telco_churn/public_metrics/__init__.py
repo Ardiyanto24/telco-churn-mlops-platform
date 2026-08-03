@@ -33,6 +33,22 @@ class PublicMetricsConfig:
             raise PublicMetricsError("public metrics configuration is invalid")
 
 
+def config_from_mapping(value: object) -> PublicMetricsConfig:
+    """Validate trusted JSON configuration at the script boundary."""
+    if not isinstance(value, Mapping):
+        raise PublicMetricsError("public metrics config must be an object")
+    allowed_origins = value.get("allowed_origins")
+    if not isinstance(allowed_origins, list) or not all(isinstance(item, str) for item in allowed_origins):
+        raise PublicMetricsError("allowed_origins must be a string list")
+    if not isinstance(value.get("candidate_mode", True), bool):
+        raise PublicMetricsError("candidate_mode must be a boolean")
+    return PublicMetricsConfig(
+        allowed_origins=tuple(allowed_origins), minimum_group_size=value.get("minimum_group_size", 100),
+        freshness_target=timedelta(seconds=value.get("freshness_target_seconds", 86400)),
+        rate_limit_per_minute=value.get("rate_limit_per_minute", 60), candidate_mode=value.get("candidate_mode", True),
+    )
+
+
 _PUBLIC_METRICS = {
     "telemetry": {"request_count", "success_rate", "error_rate", "latency_p95_ms"},
     "monitoring": {"drifted_feature_count", "quality_issue_count", "prediction_psi"},
@@ -69,7 +85,7 @@ def _build_snapshot(*, records: list[dict[str, Any]], config: PublicMetricsConfi
     for item in source_rows:
         result = _public_result(item, config.minimum_group_size)
         destination = {"telemetry": "service", "monitoring": "monitoring", "performance": "performance", "alert": "alerts", "recommendation": "recommendations"}.get(item["result_type"])
-        if destination:
+        if destination and len(categorized[destination]) < 100:
             categorized[destination].append(result)
     latest = source_rows[0] if source_rows else None
     snapshot: dict[str, Any] = {

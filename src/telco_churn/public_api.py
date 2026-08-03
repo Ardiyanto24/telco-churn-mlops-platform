@@ -28,7 +28,10 @@ def create_public_api(*, store: MetricsStore, config: PublicMetricsConfig, now: 
     async def public_safety(request: Request, call_next):
         if request.method in {"GET", "HEAD"} and request.url.path.startswith("/public/v1"):
             if not limiter.allow(request.client.host if request.client else "unknown"):
-                return JSONResponse({"error": {"code": "RATE_LIMITED", "message": "Too many requests."}}, status_code=429, headers={"Retry-After": "60", "Cache-Control": "no-store"})
+                return JSONResponse(
+                    {"error": {"code": "RATE_LIMITED", "message": "Too many requests."}}, status_code=429,
+                    headers={"Retry-After": "60", "Cache-Control": "no-store", "X-Content-Type-Options": "nosniff", "X-Frame-Options": "DENY", "Referrer-Policy": "no-referrer"},
+                )
         response = await call_next(request)
         response.headers["X-Content-Type-Options"] = "nosniff"
         response.headers["X-Frame-Options"] = "DENY"
