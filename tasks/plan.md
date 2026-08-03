@@ -1,70 +1,63 @@
-# Implementation Plan: M18 Internal Metrics Store and Dashboard
+# Implementation Plan: M19 Public Metrics Exporter and API
 
 ## Overview
 
-Build a privacy-minimised internal source of truth for the aggregate outputs of
-M12, M14, M16, and M17, plus a read-only technical dashboard. The first
-implementation uses the standard-library SQLite adapter for deterministic local
-verification and exposes a PostgreSQL deployment contract through migrations
-and documented configuration. It does not process raw customer payloads or
-alter the Prediction API request path.
+Build a versioned, read-only public snapshot and API from the private M18
+aggregate store, plus a separate static public-dashboard consumer. It exposes
+only sanitised aggregate evidence and does not alter the Prediction API request
+path or grant browser access to internal credentials/databases.
 
 ## Architecture decisions
 
-- Apply ADR-0014: immutable aggregate records, explicit lineage/origin, and
-  idempotent ingestion are the core store contract.
-- Keep database access behind a small `MetricsStore` interface; the test adapter
-  is SQLite and migration SQL stays deliberately portable where possible.
-- Mount the dashboard in a separate internal app factory, protected by an
-  explicit server-side token and disabled unless a store and token are supplied.
-- Dashboard queries are read-only and return safe aggregate fields only.
+- Apply ADR-0015: allowlist-only export, origin/suppression states, immutable
+  snapshots, and versioned `/public/v1` endpoints.
+- Keep M18 internal tables private; only a public snapshot document crosses
+  the boundary.
+- Keep browser access anonymous and read-only; use explicit CORS origins,
+  caching, ETag, and local/demo rate limiting.
 
 ## Task list
 
-### Phase 1: Store foundation
+### Phase 1: Public snapshot foundation
 
-- [x] Task 1: Add versioned migration runner and SQLite metrics schema.
-- [x] Task 2: Add typed, idempotent ingestion for models, deployments, and
-  aggregate monitoring results.
+- [x] Task 1: Add a versioned immutable public snapshot migration and exporter.
+- [x] Task 2: Add allowlist, origin, suppression, stale-fallback, and schema contracts.
 
-### Checkpoint: Store foundation
+### Checkpoint: Snapshot foundation
 
-- [x] Empty database upgrades successfully; duplicate ingestion reuses a row.
-- [x] No raw identifier/payload field is accepted by the store contract.
+- [x] Empty database migrates through M19 and export retries reuse immutable content.
+- [x] Internal fields, distributions, and low-count metrics do not enter a snapshot.
 
-### Phase 2: Queries and internal dashboard
+### Phase 2: API and public consumer
 
-- [x] Task 3: Add read-only dashboard queries that preserve evidence states,
-  freshness, lineage, and distribution summaries.
-- [x] Task 4: Add an authenticated internal FastAPI dashboard with accessible,
-  responsive HTML views and no write routes.
+- [x] Task 3: Add GET-only Public Metrics API with cache, CORS, and rate limit.
+- [x] Task 4: Add a static public-dashboard consumer with explicit evidence and error states.
 
-### Checkpoint: Dashboard
+### Checkpoint: Public boundary
 
-- [x] Missing evidence renders as not available, never stable.
-- [x] An unauthorised request cannot obtain internal metrics.
-- [x] Dashboard/database errors do not change prediction-serving behaviour.
+- [x] Failed/empty source is never rendered as stable.
+- [x] Browser receives no secret or internal source payload.
+- [x] Public API/exporter failure remains isolated from prediction serving.
 
 ### Phase 3: Operational tooling and handoff
 
-- [x] Task 5: Add ingestion/retention scripts and a candidate configuration.
-- [x] Task 6: Run focused tests, review the diff, record the engineering log,
-  and create the milestone completion report.
+- [x] Task 5: Add local export/serve commands, candidate config, and JSON contract fixture.
+- [x] Task 6: Run focused tests, regression suites, review, log, and completion report.
 
 ### Checkpoint: Complete
 
-- [x] M18 success tests and relevant existing API/model suites pass.
-- [x] Migration, retention, dashboard, and ingestion evidence is reproducible.
+- [x] M19 contract tests and relevant API/model suites pass.
+- [x] Snapshot, API, and consumer integration are reproducible locally.
 
 ## Risks and mitigations
 
 | Risk | Impact | Mitigation |
 | --- | --- | --- |
-| PostgreSQL service is not available locally | Medium | Exercise the same store contract against SQLite and retain portable migration SQL; document PostgreSQL provisioning separately. |
-| Candidate/replayed evidence is mistaken for production | High | Require `data_origin` and evidence state in each stored and rendered result. |
-| Dashboard expands privacy boundary | High | Allowlist aggregate fields; reject identifiers/payloads; use server-side authentication and read-only queries. |
-| Metrics failure affects predictions | High | Keep all store/dashboard work outside the existing Prediction API factory and request path. |
+| Internal fields leak into public output | High | Allowlist exporter, negative-field tests, immutable snapshot contract, and no direct M18 queries. |
+| Candidate/replayed evidence is mistaken for production | High | Require origin, candidate mode, freshness, and non-stable evidence state in API and UI. |
+| Public endpoint is abused | Medium | Explicit CORS, GET-only routes, ETag/cache, and a conservative rate limiter. |
+| Export/API failure affects predictions | High | Separate app factory and no dependency from prediction request path. |
 
 ## Open questions
 
-- Production PostgreSQL endpoint, credentials, and internal identity provider are intentionally deferred; no secret or account configuration is committed in M18.
+- Hosted PostgreSQL/public API/static-web provider and shared production rate limiter remain deployment decisions; no secret or account configuration is committed in M19.
