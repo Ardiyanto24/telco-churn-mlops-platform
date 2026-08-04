@@ -1,0 +1,8 @@
+{
+  "approver": "ml-engineer@example.test",
+  "candidate_model_version": "m6-logistic-v1",
+  "decision_version": "m8-promotion-decision/v1",
+  "initial_baseline": true,
+  "report_sha256": "85a4b86ab9c0248067420ac8f6b7b1269605874ccb4cd8d2836ef3c17174182c",
+  "status": "approved"
+}

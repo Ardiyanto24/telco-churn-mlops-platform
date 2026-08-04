@@ -1,0 +1,50 @@
+{
+  "config": {
+    "fdr_alpha": 0.05,
+    "fdr_method": "bh",
+    "jensen_shannon": [
+      0.05,
+      0.1,
+      0.2
+    ],
+    "minimum_sample_size": 999999,
+    "psi": [
+      0.1,
+      0.2,
+      0.3
+    ],
+    "quality_delta": [
+      0.01,
+      0.05,
+      0.15
+    ],
+    "status": "experimental",
+    "version": "m14-experimental/v1",
+    "wasserstein_normalized": [
+      0.05,
+      0.1,
+      0.2
+    ]
+  },
+  "current_window": {
+    "sha256": "0eea83d4d4641f0158d5286fa1415fdfb912d73cc7b6fb5c13c6837a4d52da5c",
+    "source_name": "telco_churn.csv",
+    "source_period": "m6-validated-reference-replay"
+  },
+  "feature_results": {},
+  "idempotency_key": "413cdc763f42652f2bffb4496630537bbcc1aa43ec74ef15dc7a3f1798e56883",
+  "lineage": {
+    "baseline_id": "cb915da23b430f6c9f0bab2b7d5b5967fa3270a8d1a44bf6025e8e7ae87079de",
+    "baseline_sha256": "cb915da23b430f6c9f0bab2b7d5b5967fa3270a8d1a44bf6025e8e7ae87079de",
+    "baseline_status": "provisional",
+    "model_version": "m6-logistic-v1",
+    "schema_version": "v1"
+  },
+  "monitoring_result_version": "telco-churn-monitoring/v1",
+  "prediction": {
+    "reason": "monitoring_not_completed",
+    "status": "unknown"
+  },
+  "reused": false,
+  "run_status": "insufficient_data"
+}

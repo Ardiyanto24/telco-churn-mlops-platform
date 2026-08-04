@@ -1,5 +1,9 @@
 # Progress Tracking - Telco Churn MLOps
 
+> Portfolio update (2026-08-04): M0-M19 are complete locally in candidate/demo
+> mode. M20 security/privacy hardening and M21 operational readiness remain.
+> This update supersedes the older snapshot text below.
+
 > Last updated: 2026-08-02
 >
 > This is a concise status index. Completion reports and engineering logs hold

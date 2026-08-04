@@ -8,4 +8,7 @@ coverage/
 .env
 .env.local
 artifacts/candidates/
+artifacts/*.db
+artifacts/*.html
+artifacts/**/*.log
 mlflow/
